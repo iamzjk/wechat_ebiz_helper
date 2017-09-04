@@ -1,0 +1,22 @@
+{% extends "bootstrap/base.html" %}
+
+{% block content %}
+<table class="table table-striped">
+<thead>
+    <tr>
+        <th>更新时间</th> 
+        <th>物流状态</th>
+        <th>录入人</th>
+    </tr>
+</thead>
+<tbody>
+{% for status in statuses %}
+    <tr>
+        <td>{{ status.time }}</td>
+        <td>{{ status.status }}</td>
+        <td>{{ status.reporter }}</td>
+    </tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

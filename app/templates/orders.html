@@ -4,26 +4,25 @@
 <table class="table table-striped">
 <thead>
     <tr>
-        <th>订单号</th>
         <th>姓名</th> 
-        <th>电话</th>
+        <th>快递单号</th>
         <th>品名</th>
         <th>价格</th> 
         <th>数量</th>
-        <th>快递单号</th>
         <th>创建日期</th> 
     </tr>
 </thead>
 <tbody>
 {% for order in orders %}
     <tr>
-        <td>{{ order.order_id }}</td>
         <td>{{ order.client }}</td>
-        <td>{{ order.phone }}</td>
+        <td>
+<!--             <a href="http://www.jingexpress.com/TrackSearch.aspx?TXT_TRACKNO={{ order.tracking }}">{{ order.tracking }}</a> -->
+            <a href="{{ url_for('tracking_status', tracking_number=order.tracking) }}">{{ order.tracking }}</a>
+        </td>
         <td>{{ order.product }}</td>
         <td>{{ order.price }}</td>
         <td>{{ order.quantity }}</td>
-        <td>{{ order.tracking }}</td>
         <td>{{ order.created_time }}</td>
     </tr>
 {% endfor %}
