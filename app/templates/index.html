@@ -1,9 +1,22 @@
 {% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 
 {% block content %}
-  <h1>橙昕美购 - 订单与快递查询系统</h1>
+<div class='container', style="padding:0 25px">
+  <h2>橙昕美购</h2>
+  <h4>订单与快递查询系统</h4>
+  <p>微信号：jelfsony</p>
+  <br>
+    <form method="POST" action="/">
+        <dl>
+        {{ form.csrf_token }}
+        {{ wtf.form_field(form.client) }}
+        {{ wtf.form_field(form.phone) }}
+        <input class="btn btn-default" type="submit" value="查询">
+        </dl>
+    </form>
+</div>
+
 {% endblock %}
 
-{% block body %}
-  <p>微信：jelfsony</p>
-{% endblock %}
+
