@@ -69,4 +69,4 @@ def tracking_status(tracking_number):
     return render_template('tracking_status.html', statuses=statuses)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0')
