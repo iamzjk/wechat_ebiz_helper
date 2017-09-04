@@ -10,16 +10,12 @@ from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import DataRequired
 
+from config import config
 from tracking import Tracking
 
 app = Flask(__name__)
 Bootstrap(app)
-app.config['SECRET_KEY'] = 'usatocn2013'
-app.config['JSON_AS_ASCII'] = False
-app.config['MYSQL_HOST'] = 'iamzjk.mynetgear.com'
-app.config['MYSQL_USER'] = 'jelfsony'
-app.config['MYSQL_PASSWORD'] = 'jelfsony0910'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+app.config.update(config)
 mysql = MySQL(app)
 
 
