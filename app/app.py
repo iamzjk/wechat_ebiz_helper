@@ -3,7 +3,7 @@
     wechat business helper v0.1.0
 '''
 
-from flask import Flask, jsonify, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for
 from flask_mysqldb import MySQL
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
@@ -28,7 +28,9 @@ class ShowMyOrderForm(FlaskForm):
 def index():
     form = ShowMyOrderForm()
     if form.validate_on_submit():
-        return redirect(url_for('orders', client=form.client.data, phone=form.phone.data))
+        return redirect(
+            url_for('orders', client=form.client.data, phone=form.phone.data)
+        )
     else:
         return render_template('index.html', form=form)
 
@@ -63,6 +65,3 @@ def tracking_status(tracking_number):
     statuses = tracking.run()
 
     return render_template('tracking_status.html', statuses=statuses)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
