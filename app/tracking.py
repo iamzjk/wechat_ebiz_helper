@@ -74,13 +74,12 @@ class JinMei(Tracking):
         for content in contents:
             if len(content):
                 for child in content:
-                    statuses.append(content.text + child.text)
+                    statuses.append('EMS' + content.text + child.text)
                     if content.text.startswith('国内速运'):
                         forward_tracking = child.text
             else:
                 statuses.append(content.text)
 
-        # TODO: parse EMS and append to statuses
         # if forward_tracking:
         #     try:
         #         ems = EMS(forward_tracking)
