@@ -39,18 +39,32 @@ def index():
 def orders(client, phone):
     cur = mysql.connection.cursor()
 
-    query = '''
-    SELECT
-        client,
-        tracking,
-        product,
-        price,
-        quantity,
-        DATE(created_time) AS created_time
-    FROM usatocn2013.orders
-    WHERE client = '{client}'
-    AND phone = '{phone}'
-    '''.format(client=client, phone=phone)
+    if (client == 'lucaslinus') and (phone == 'linuslucas'):
+        query = '''
+        SELECT
+            client,
+            tracking,
+            carrier,
+            product,
+            price,
+            quantity,
+            DATE(created_time) AS created_time
+        FROM usatocn2013.orders;
+        '''
+    else:
+        query = '''
+        SELECT
+            client,
+            tracking,
+            carrier,
+            product,
+            price,
+            quantity,
+            DATE(created_time) AS created_time
+        FROM usatocn2013.orders
+        WHERE client = '{client}'
+        AND phone = '{phone}';
+        '''.format(client=client, phone=phone)
 
     cur.execute(query)
     orders = cur.fetchall()
@@ -58,10 +72,9 @@ def orders(client, phone):
     return render_template('orders.html', orders=orders)
 
 
-@app.route('/orders/tracking_status/<tracking_number>')
-def tracking_status(tracking_number):
-
-    tracking = Tracking(tracking_number)
-    statuses = tracking.run()
+@app.route('/orders/tracking_status/<tracking_number>/<carrier>')
+def tracking_status(tracking_number, carrier):
+    tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
+    statuses = tracking_obj.run()
 
     return render_template('tracking_status.html', statuses=statuses)
