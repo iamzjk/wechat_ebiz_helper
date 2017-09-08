@@ -16,10 +16,7 @@
 {% for order in orders %}
     <tr>
         <td>{{ order.client }}</td>
-        <td>
-<!--             <a href="http://www.jingexpress.com/TrackSearch.aspx?TXT_TRACKNO={{ order.tracking }}">{{ order.tracking }}</a> -->
-            <a href="{{ url_for('tracking_status', tracking_number=order.tracking) }}">{{ order.tracking }}</a>
-        </td>
+        <td><a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier) }}">{{ order.tracking }}</a></td>
         <td>{{ order.product }}</td>
         <td>{{ order.price }}</td>
         <td>{{ order.quantity }}</td>
