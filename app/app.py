@@ -69,6 +69,9 @@ def orders(client, phone):
     cur.execute(query)
     orders = cur.fetchall()
 
+    if not orders:
+        return '<p>啊哦！ 没有找到相关订单，请核对收件人姓名和电话。</p>'
+
     return render_template('orders.html', orders=orders)
 
 
