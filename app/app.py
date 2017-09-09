@@ -78,3 +78,4 @@ def tracking_status(tracking_number, carrier):
     statuses = tracking_obj.track()
 
     return render_template('tracking_status.html', statuses=statuses)
+
