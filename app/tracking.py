@@ -3,6 +3,7 @@
     Tracking Status Class
 '''
 
+import json
 from lxml.html import fromstring
 import requests
 
@@ -33,7 +34,7 @@ class Tracking():
         else:
             return None
 
-    def run(self):
+    def track(self):
         html = self.get_html()
         return self.parse_html(html)
 
@@ -80,26 +81,45 @@ class JinMei(Tracking):
             else:
                 statuses.append(content.text)
 
-        # if forward_tracking:
-        #     try:
-        #         ems = EMS(forward_tracking)
-        #         ems_html = ems.get_html()
-        #         ems.parse_html(ems_html)
-        #     except Exception:
-        #         pass
-
         headers = ['time', 'status', 'reporter']
-        return self.parse_statuses(statuses, headers)
+        parsed = self.parse_statuses(statuses, headers)
+
+        if forward_tracking:
+            try:
+                ems = EMS(forward_tracking)
+                ems_statuses = ems.track()
+            except Exception:
+                pass
+
+            parsed += ems_statuses
+
+        return parsed
 
 
 class EMS(Tracking):
     '''
         EMS
     '''
-    # 'https://www.kuaidi100.com/query?type=ems&postid={tracking}&id=1&valicode=&temp='
+
     tracking_base_url = (
-        'http://www.kuaidi.com/index-ajaxselectcourierinfo-{tracking}-ems.html'
+        'https://www.kuaidi100.com/query?type=ems&postid={tracking}&id=1&valicode=&temp='
     )
+
+    def track(self):
+        '''
+            EMS tracking
+        '''
+        response = json.loads(self.get_html())
+
+        statuses = []
+        for status in response['data']:
+            new_status = {}
+            new_status['time'] = status['time']
+            new_status['status'] = status['context']
+            new_status['reporter'] = status['location']
+            statuses.append(new_status)
+
+        return statuses[::-1]
 
     def get_html(self):
         '''
@@ -137,6 +157,5 @@ if __name__ == '__main__':
     # 8000118040
     # QX900355101
     tracking = Tracking.get_tracking_object('8000118040', '锦美')
-    html = tracking.get_html()
-    parsed = tracking.parse_html(html)
+    parsed = tracking.track()
     print(parsed)
