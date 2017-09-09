@@ -69,13 +69,15 @@ def orders(client, phone):
     cur.execute(query)
     orders = cur.fetchall()
 
+    if not orders:
+        return '<p>啊哦！ 没有找到相关订单，请核对收件人姓名和电话。</p>'
+
     return render_template('orders.html', orders=orders)
 
 
 @app.route('/orders/tracking_status/<tracking_number>/<carrier>')
 def tracking_status(tracking_number, carrier):
     tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
-    statuses = tracking_obj.run()
+    statuses = tracking_obj.track()
 
     return render_template('tracking_status.html', statuses=statuses)
-
