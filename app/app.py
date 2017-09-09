@@ -70,9 +70,10 @@ def orders(client, phone):
     orders = cur.fetchall()
 
     if not orders:
-        return '<p>啊哦！ 没有找到相关订单，请核对收件人姓名和电话。</p>'
-
-    return render_template('orders.html', orders=orders)
+        return render_template(
+            'no_order_found.html', client=client, phone=phone)
+    else:
+        return render_template('orders.html', orders=orders)
 
 
 @app.route('/orders/tracking_status/<tracking_number>/<carrier>')
