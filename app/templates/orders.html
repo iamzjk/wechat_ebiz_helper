@@ -5,23 +5,22 @@
 <table class="table table-striped">
 <thead>
     <tr>
-        <th>姓名</th> 
+        <th>收件人</th> 
         <th>快递单号</th>
-        <th>品名</th>
-        <th>价格</th> 
-        <th>数量</th>
-        <th>创建日期</th> 
+        <th>订单详情</th>
     </tr>
 </thead>
 <tbody>
 {% for order in orders %}
     <tr>
-        <td>{{ order.client }}</td>
+        <td white-space: nowrap>{{ order.client }}</td>
         <td><a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier) }}">{{ order.tracking }}</a></td>
-        <td>{{ order.product }}</td>
-        <td>{{ order.price }}</td>
-        <td>{{ order.quantity }}</td>
-        <td>{{ order.created_time }}</td>
+        <td>
+            <div class="row">品名：{{ order.product }}</div>
+            <div class="row">价格：{{ order.price }}元</div>
+            <div class="row">数量：{{ order.quantity }}</div>
+            <div class="row">日期：{{ order.created_time }}</div>
+        </td>
     </tr>
 {% endfor %}
 </tbody>
