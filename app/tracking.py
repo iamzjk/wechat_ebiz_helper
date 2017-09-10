@@ -127,7 +127,6 @@ class EMS(Tracking):
         '''
 
         response = requests.get(self.tracking_url, headers=self.header)
-        print(response.text)
         return response.text
 
 
