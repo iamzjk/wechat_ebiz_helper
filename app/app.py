@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-    wechat business helper v0.1.0
+    wechat business helper
 '''
 
 from flask import Flask, render_template, redirect, url_for
