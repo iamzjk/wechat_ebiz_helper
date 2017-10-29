@@ -14,7 +14,10 @@ class Tracking():
     '''
 
     tracking_base_url = '{tracking}'
-    header = {'User-Agent': 'Mozilla/5.0'}
+    header = {
+        'User-Agent': 'Mozilla/5.0',
+        "X-Forwarded-For": "::ffff:24.127.96.129",
+    }
 
     def __init__(self, tracking):
         self.tracking = tracking
