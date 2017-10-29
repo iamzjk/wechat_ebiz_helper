@@ -12,7 +12,11 @@
 {% for status in statuses %}
     <tr>
         <td white-space: nowrap>{{ status.time }}</td>
-        <td>{{ status.status }}</td>
+        {% if status.status.startswith('EMS') %}
+            <td><a href="https://m.kuaidi100.com/index_all.html?type=ems&postid={{ status.status.split('：')[1] }}">{{ status.status }}</a></td>
+        {% else %}
+            <td>{{ status.status }}</td>
+        {% endif %}
     </tr>
 {% endfor %}
 </tbody>

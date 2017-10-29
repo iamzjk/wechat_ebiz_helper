@@ -70,28 +70,27 @@ class JinMei(Tracking):
         root = fromstring(html)
         contents = root.xpath("//td")
 
-        forward_tracking = None
+        # forward_tracking = None
         statuses = []
         for content in contents:
             if len(content):
                 for child in content:
                     statuses.append('EMS' + content.text + child.text)
-                    if content.text.startswith('国内速运'):
-                        forward_tracking = child.text
+                    # if content.text.startswith('国内速运'):
+                    #     forward_tracking = child.text
             else:
                 statuses.append(content.text)
 
         headers = ['time', 'status', 'reporter']
         parsed = self.parse_statuses(statuses, headers)
 
-        if forward_tracking:
-            try:
-                ems = EMS(forward_tracking)
-                ems_statuses = ems.track()
-            except Exception:
-                pass
-
-            parsed += ems_statuses
+        # if forward_tracking:
+        #     try:
+        #         ems = EMS(forward_tracking)
+        #         ems_statuses = ems.track()
+        #         parsed += ems_statuses
+        #     except Exception as err:
+        #         print(err)
 
         return parsed
 
