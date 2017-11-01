@@ -1,13 +1,16 @@
 {% extends "bootstrap/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block content %}
-<head>
+{% block title %}橙昕美购 - 查询{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+{% endblock %}
 
-</head>
-
+{% block content %}
 <div class='container', style="padding:0 25px; max-width:350px">
   <h2>橙昕美购</h2>
   <h4>订单与快递查询工具</h4>
