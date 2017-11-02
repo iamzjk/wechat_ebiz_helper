@@ -20,7 +20,7 @@ mysql = MySQL(app)
 
 
 class ShowMyOrderForm(FlaskForm):
-    client = StringField('收件人姓名', validators=[DataRequired()])
+    client = StringField('收件人-姓名', validators=[DataRequired()])
     phone = StringField('电话', validators=[DataRequired()])
 
 
