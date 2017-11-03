@@ -1,25 +1,29 @@
 {% extends "bootstrap/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-<head>
+{% block title %}橙昕美购 - 查询{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
-</head>
+{% endblock %}
 
 {% block content %}
-<div id='form', class='container', style="padding:0 25px; max-width:350px">
-    <h2>橙昕美购</h2>
-    <h4>订单与快递查询工具</h4>
-    <p>掌柜微信：jelfsony</p>
-    <br>
-        <form method="POST" action="/">
-            <dl>
-            {{ form.csrf_token }}
-            {{ wtf.form_field(form.client) }}
-            {{ wtf.form_field(form.phone) }}
-            <input class="btn btn-default" type="submit" value="查询">
-            </dl>
-        </form>
+<div class='container', style="padding:0 25px; max-width:350px">
+  <h2>橙昕美购</h2>
+  <h4>订单与快递查询工具</h4>
+  <p>掌柜微信：jelfsony</p>
+  <br>
+    <form method="POST" action="/">
+        <dl>
+        {{ form.csrf_token }}
+        {{ wtf.form_field(form.client) }}
+        {{ wtf.form_field(form.phone) }}
+        <input class="btn btn-default" type="submit" value="查询">
+        </dl>
+    </form>
 </div>
 {% endblock %}
 
