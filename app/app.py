@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 '''
     wechat business helper
+
+    How to put SQLAlchemy models in a seperate file
+    https://stackoverflow.com/questions/9692962/flask-sqlalchemy-import-context-issue/9695045#9695045
 '''
 
 from flask import Flask, render_template, redirect, url_for, jsonify, request
@@ -138,7 +141,7 @@ def get_tracking_status(tracking_number, carrier):
     return jsonify({'data': statuses})
 
 
-@app.route('/api/orders/new/', methods=['POST'])
+@app.route('/api/orders/', methods=['POST'])
 def add_one_new_order():
     new_order = request.json['order']
     _insert_one_order(new_order)
