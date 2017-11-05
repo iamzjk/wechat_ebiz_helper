@@ -14,7 +14,9 @@ class Tracking():
     '''
 
     tracking_base_url = '{tracking}'
-    header = {'User-Agent': 'Mozilla/5.0'}
+    header = {
+        'User-Agent': 'Mozilla/5.0',
+    }
 
     def __init__(self, tracking):
         self.tracking = tracking
