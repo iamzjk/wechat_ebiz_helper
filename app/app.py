@@ -117,7 +117,7 @@ def tracking_status(tracking_number, carrier):
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('x-access-token')
+        token = request.headers.get('X-Token')
 
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
@@ -126,36 +126,52 @@ def token_required(f):
             data = jwt.decode(token, app.config['SECRET_KEY'])
             current_user = User.query.filter_by(username=data['username']).first()
         except:
-            return jsonify({'message': 'Token is invalid!'}), 401
+            return jsonify({'code': 50008, 'data': 'Token is invalid!'}), 401
 
         return f(current_user, *args, **kwargs)
 
     return decorated
 
 
-
-@app.route('/api/login')
+@app.route('/api/user/login', methods=['POST'])
 def login():
-    auth = request.authorization
+    auth = request.get_json()
 
-    if not auth or not auth.username or not auth.password:
+    if not auth or not auth.get('username') or not auth.get('password'):
         return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
 
-    user = User.query.filter_by(username=auth.username).first()
+    username = auth['username']
+    password = auth['password']
+
+    user = User.query.filter_by(username=username).first()
 
     if not user:
         return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
 
-    if check_password_hash(user.password, auth.password):
+    if check_password_hash(user.password, password):
         token = jwt.encode({
             'username': user.username,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)},
             app.config['SECRET_KEY']
         )
 
-        return jsonify({'token': token.decode('UTF-8')})
+        return jsonify({
+            "code": 20000,
+            "data": {
+                "token": token.decode('UTF-8')
+            }
+        })
 
     return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+
+
+@app.route('/api/user/logout', methods=['POST'])
+@token_required
+def logout(current_user):
+    return jsonify({
+        "code": 20000,
+        "data": "success"
+    })
 
 
 @app.route('/api/user', methods=['GET'])
@@ -205,7 +221,7 @@ def get_one_user(current_user, username):
 @token_required
 def create_user(current_user):
     if not current_user.admin:
-        return jsonify({'message' : 'Cannot perform that function!'})
+        return jsonify({'message': 'Cannot perform that function!'})
 
     data = request.get_json()
 
@@ -258,13 +274,38 @@ def delete_user(current_user, username):
     return jsonify({'message': 'The user has been deleted!'})
 
 
+@app.route('/api/user/info', methods=['GET'])
+@token_required
+def get_user_info(current_user):
+
+    role = 'admin' if current_user.admin else 'worker'
+    response = {
+        "code": 20000,
+        "data": {
+            "role": [
+                role
+            ],
+            "name": current_user.username,
+            "avatar": "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+        }
+    }
+
+    return jsonify(response)
+
+
 @app.route('/api/order', methods=['GET'])
 @token_required
 def get_all_orders(current_user):
     if not current_user.admin:
         return jsonify({'message': 'Cannot perform that function!'})
 
-    orders = Order.query.order_by(Order.created_time.desc()).all()
+    query_client = request.args.get('client')
+
+    if query_client:
+        query_client = '%{}%'.format(query_client)
+        orders = Order.query.filter(Order.client.like(query_client)).order_by(Order.created_time.desc()).all()
+    else:
+        orders = Order.query.order_by(Order.created_time.desc()).all()
 
     output = []
     for order in orders:
@@ -282,14 +323,20 @@ def get_all_orders(current_user):
         }
         output.append(new)
 
-    return jsonify({'orders': output})
+    return jsonify({
+        'code': 20000,
+        'data': {
+            'orders': output
+        }
+    })
 
 
 @app.route('/api/order', methods=['POST'])
 @token_required
 def create_order(current_user):
+    print('Creating Order')
     if not current_user.admin:
-        return jsonify({'message': 'Cannot perform that function!'})
+        return jsonify({'code': 20001, 'data': 'Cannot perform that function!'})
 
     data = request.get_json()
 
@@ -306,7 +353,7 @@ def create_order(current_user):
     db.session.add(new_order)
     db.session.commit()
 
-    return jsonify({'message': "Order created!"})
+    return jsonify({'code': 20000, 'data': "Order created!"})
 
 
 @app.route('/api/order/<order_id>', methods=['PUT'])
@@ -321,13 +368,13 @@ def update_order(current_user, order_id):
         return jsonify({'message': 'No order found!'})
 
     data = request.get_json()
-
+    print(data)
     for key, value in data.items():
         setattr(order, key, value)
 
     db.session.commit()
 
-    return jsonify({'message': 'Order record has been updated!'})
+    return jsonify({'code': 20000, 'data': 'Order record has been updated!'})
 
 
 @app.route('/api/order/<order_id>', methods=['DELETE'])
@@ -339,9 +386,9 @@ def delete_order(current_user, order_id):
     order = Order.query.filter_by(order_id=order_id).first()
 
     if not order:
-        return jsonify({'message': 'No order found!'})
+        return jsonify({'code': 20001, 'data': 'No order found!'})
 
     db.session.delete(order)
     db.session.commit()
 
-    return jsonify({'message': 'Order record deleted!'})
+    return jsonify({'code': 20000, 'data': 'Order record deleted!'})
