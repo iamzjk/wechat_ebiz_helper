@@ -35,10 +35,10 @@ db.init_app(app)
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-
 ###
 #   Forms
 ###
+
 
 class ShowMyOrderForm(FlaskForm):
     client = StringField('收件人', validators=[DataRequired()])
