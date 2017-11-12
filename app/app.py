@@ -8,6 +8,7 @@
 
 import datetime
 from functools import wraps
+import json
 
 from flask import Flask, render_template, redirect, url_for, jsonify, request, make_response
 from flask_mysqldb import MySQL
@@ -299,11 +300,32 @@ def get_all_orders(current_user):
     if not current_user.admin:
         return jsonify({'message': 'Cannot perform that function!'})
 
-    query_client = request.args.get('client')
+    # date_range = json.loads(request.args.get('dateRange'))
+    # if date_range:
+    #     date_start, _, date_end = date_range.split('-')
 
-    if query_client:
-        query_client = '%{}%'.format(query_client)
-        orders = Order.query.filter(Order.client.like(query_client)).order_by(Order.created_time.desc()).all()
+    date_range = None
+
+    query = json.loads(request.args.get('search'))
+    if query.get('value'):
+        query_value = '%{}%'.format(query['value'])
+        query_key = query['key']
+
+    show_no_tracking = json.loads(request.args.get('showNoTracking'))
+
+    if query.get('value') and show_no_tracking:
+        orders = Order.query.filter(
+            getattr(Order, query_key).like(query_value),
+            Order.tracking == ''
+        ).order_by(Order.created_time.desc()).all()
+    elif query.get('value') and not show_no_tracking:
+        orders = Order.query.filter(
+            getattr(Order, query_key).like(query_value)
+        ).order_by(Order.created_time.desc()).all()
+    elif show_no_tracking and not query.get('value'):
+        orders = Order.query.filter(
+            Order.tracking == ''
+        ).order_by(Order.created_time.desc()).all()
     else:
         orders = Order.query.order_by(Order.created_time.desc()).all()
 
@@ -314,8 +336,8 @@ def get_all_orders(current_user):
             'client': order.client,
             'phone': order.phone,
             'product': order.product,
-            'price': str(round(order.price, 2)),
-            'cost': str(round(order.cost, 2)),
+            'price': str(int(order.price)),
+            'cost': str(int(order.cost)),
             'quantity': str(order.quantity),
             'tracking': order.tracking,
             'carrier': order.carrier,
