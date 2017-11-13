@@ -414,3 +414,11 @@ def delete_order(current_user, order_id):
     db.session.commit()
 
     return jsonify({'code': 20000, 'data': 'Order record deleted!'})
+
+
+@app.route('/api/tracking/<tracking_number>/<carrier>', methods=['GET'])
+def get_tracking_status(tracking_number, carrier):
+    tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
+    statuses = tracking_obj.track()
+
+    return jsonify({'code': 20000, 'data': {'statuses': statuses}})
