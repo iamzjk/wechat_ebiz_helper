@@ -33,6 +33,8 @@ class Tracking():
             return EMS(tracking)
         elif carrier == '千喜':
             return QianXi(tracking)
+        elif carrier == '圆通':
+            return YuanTong(tracking)
         else:
             return None
 
@@ -151,6 +153,40 @@ class QianXi(Tracking):
         headers = ['time', 'reporter', 'status']
         return self.parse_statuses(
             statuses, headers=headers)
+
+
+class YuanTong(Tracking):
+    '''
+        圆通
+    '''
+
+    tracking_base_url = (
+        'https://www.kuaidi100.com/query?type=yuantong&postid={tracking}'
+    )
+
+    def track(self):
+        '''
+            圆通 tracking
+        '''
+        response = json.loads(self.get_html())
+
+        statuses = []
+        for status in response['data']:
+            new_status = {}
+            new_status['time'] = status['time']
+            new_status['status'] = status['context']
+            new_status['reporter'] = status['location']
+            statuses.append(new_status)
+
+        return statuses[::-1]
+
+    def get_html(self):
+        '''
+            Getting HTML String From Tracking URL
+        '''
+
+        response = requests.get(self.tracking_url, headers=self.header)
+        return response.text
 
 
 if __name__ == '__main__':

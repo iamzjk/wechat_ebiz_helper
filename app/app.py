@@ -419,7 +419,7 @@ def delete_order(current_user, order_id):
 @app.route('/api/tracking/<tracking_number>/<carrier>', methods=['GET'])
 def get_tracking_status(tracking_number, carrier):
 
-    supported_carriers = ('锦美', '千喜')
+    supported_carriers = ('锦美', '千喜', '圆通')
 
     if carrier in supported_carriers:
         tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
