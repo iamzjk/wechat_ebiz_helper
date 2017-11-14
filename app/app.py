@@ -152,7 +152,7 @@ def login():
     if check_password_hash(user.password, password):
         token = jwt.encode({
             'username': user.username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)},
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30)},
             app.config['SECRET_KEY']
         )
 
@@ -419,10 +419,13 @@ def delete_order(current_user, order_id):
 @app.route('/api/tracking/<tracking_number>/<carrier>', methods=['GET'])
 def get_tracking_status(tracking_number, carrier):
 
-    if carrier == '人肉':
-        statuses = []
-    else:
+    supported_carriers = ('锦美', '千喜')
+
+    if carrier in supported_carriers:
         tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
         statuses = tracking_obj.track()
+    else:
+        error_msg = '暂时不支持查询<{0}>'.format(carrier)
+        statuses = [{'time': '', 'status': error_msg}]
 
     return jsonify({'code': 20000, 'data': {'statuses': statuses}})
