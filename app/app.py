@@ -424,6 +424,8 @@ def get_tracking_status(tracking_number, carrier):
     if carrier in supported_carriers:
         tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
         statuses = tracking_obj.track()
+        if not statuses:
+            statuses = [{'time': '', 'status': '暂无物流状态， 请稍后再试。'}]
     else:
         error_msg = '暂时不支持查询<{0}>'.format(carrier)
         statuses = [{'time': '', 'status': error_msg}]
