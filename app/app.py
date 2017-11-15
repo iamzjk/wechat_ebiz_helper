@@ -23,7 +23,8 @@ import jwt
 import uuid
 
 from config import config
-from tracking import Tracking
+import sql
+from tracking import tracking_shipment
 from models import db, Order, User
 
 app = Flask(__name__)
@@ -91,6 +92,7 @@ def orders(client, phone):
 
     cur.execute(query)
     orders = cur.fetchall()
+    cur.close()
 
     if not orders:
         return render_template(
@@ -101,8 +103,7 @@ def orders(client, phone):
 
 @app.route('/orders/tracking_status/<tracking_number>/<carrier>')
 def tracking_status(tracking_number, carrier):
-    tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
-    statuses = tracking_obj.track()
+    statuses = tracking_shipment(tracking_number, carrier)
 
     return render_template('tracking_status.html', statuses=statuses)
 
@@ -121,13 +122,13 @@ def token_required(f):
         token = request.headers.get('X-Token')
 
         if not token:
-            return jsonify({'message': 'Token is missing!'}), 401
+            return jsonify({'code': 50014, 'data': 'Token is missing!'})
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'])
             current_user = User.query.filter_by(username=data['username']).first()
         except:
-            return jsonify({'code': 50008, 'data': 'Token is invalid!'}), 401
+            return jsonify({'code': 50014, 'data': 'Token is invalid!'})
 
         return f(current_user, *args, **kwargs)
 
@@ -417,17 +418,111 @@ def delete_order(current_user, order_id):
 
 
 @app.route('/api/tracking/<tracking_number>/<carrier>', methods=['GET'])
-def get_tracking_status(tracking_number, carrier):
-
-    supported_carriers = ('锦美', '千喜', '圆通')
-
-    if carrier in supported_carriers:
-        tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
-        statuses = tracking_obj.track()
-        if not statuses:
-            statuses = [{'time': '', 'status': '暂无物流状态， 请稍后再试。'}]
-    else:
-        error_msg = '暂时不支持查询<{0}>'.format(carrier)
-        statuses = [{'time': '', 'status': error_msg}]
+@token_required
+def get_tracking_status(current_user, tracking_number, carrier):
+    statuses = tracking_shipment(tracking_number, carrier)
 
     return jsonify({'code': 20000, 'data': {'statuses': statuses}})
+
+
+###
+#   Sales Statistics
+###
+
+@app.route('/api/stats/monthly_sales', methods=['GET'])
+@token_required
+def get_monthly_sales_stats(current_user):
+    if not current_user.admin:
+        return jsonify({'message': 'Cannot perform that function!'})
+    query = sql.GET_MONTHLY_SALES
+    cur = mysql.connection.cursor()
+    cur.execute(query)
+    data = cur.fetchall()
+    cur.close()
+
+    return jsonify({'code': 20000, 'data': data})
+
+
+@app.route('/api/stats/monthly_sales/count_to', methods=['GET'])
+@token_required
+def get_monthly_sales_count_to(current_user):
+    if not current_user.admin:
+        return jsonify({'message': 'Cannot perform that function!'})
+    query = sql.GET_THIS_MONTH_COUNT_TO
+    cur = mysql.connection.cursor()
+    cur.execute(query)
+    data = cur.fetchall()
+    cur.close()
+
+    return jsonify({'code': 20000, 'data': data[0]})
+
+
+@app.route('/api/stats/client_ranking/alltime', methods=['GET'])
+@token_required
+def get_alltime_client_ranking_stats(current_user):
+    query = sql.GET_ALLTIME_CLIENT_RANKING
+    cur = mysql.connection.cursor()
+    cur.execute(query)
+    data = cur.fetchall()
+    cur.close()
+
+    return jsonify({'code': 20000, 'data': data})
+
+
+@app.route(
+    '/api/stats/client_ranking/<start_date>/<end_date>',
+    methods=['GET']
+)
+@token_required
+def get_period_client_ranking_stats(current_user, start_date, end_date):
+    query = sql.GET_PERIOD_CLIENT_RANKING.format(
+        start_date=start_date, end_date=end_date
+    )
+    cur = mysql.connection.cursor()
+    cur.execute(query)
+    data = cur.fetchall()
+    cur.close()
+
+    return jsonify({'code': 20000, 'data': data})
+
+
+@app.route('/api/stats/daily_sales', methods=['GET'])
+@token_required
+def get_daily_sales_summary(current_user):
+    if not current_user.admin:
+        return jsonify({'message': 'Cannot perform that function!'})
+    query = sql.GET_DAILY_SALES_SUMMARY
+    cur = mysql.connection.cursor()
+    cur.execute(query)
+    data = cur.fetchall()
+    cur.close()
+
+    db_output = {str(item['date']): item for item in data}
+
+    base = datetime.datetime.today()
+    numdays = base.day
+    date_list = [
+        str((base - datetime.timedelta(days=x)).date())
+        for x in range(0, numdays)
+    ][::-1]
+
+    sales = []
+    gross_profit = []
+    dates = []
+    for date in date_list:
+        if date in db_output:
+            dates.append(date)
+            sales.append(db_output[date]['sales'])
+            gross_profit.append(db_output[date]['gross_profit'])
+        else:
+            dates.append(date)
+            sales.append(0)
+            gross_profit.append(0)
+
+    result = {
+        'date': dates,
+        'sales': sales,
+        'gross_profit': gross_profit
+    }
+
+    return jsonify({'code': 20000, 'data': result})

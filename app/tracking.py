@@ -3,9 +3,93 @@
     Tracking Status Class
 '''
 
+from datetime import datetime
 import json
 from lxml.html import fromstring
 import requests
+
+KUAIDI100_CARRIERS = {
+    '申通': 'shentong',
+    '圆通': 'yuantong',
+    '顺丰': 'shunfeng',
+    '中通': 'zhongtong',
+    'EMS': 'ems',
+    '韵达': 'yunda',
+    '天天': 'tiantian',
+}
+
+HUAREN_CARRIERS = ['锦美', '千喜']
+
+SUPPORTED_CARRIERS = HUAREN_CARRIERS + list(KUAIDI100_CARRIERS.keys())
+
+
+def tracking_shipment(tracking_number, carrier):
+
+    now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+    if carrier in HUAREN_CARRIERS:
+        tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
+        statuses = tracking_obj.track()
+    elif carrier in KUAIDI100_CARRIERS:
+        statuses = track_via_kuaidi100(tracking_number, carrier)
+    else:
+        error_msg = '暂时不支持查询<{0}>'.format(carrier)
+        statuses = [{'time': now, 'status': error_msg}]
+
+    if not statuses:
+        statuses = [{'time': now, 'status': '暂无物流状态， 请稍后再试。'}]
+
+    return statuses
+
+
+def track_via_kuaidi100(tracking_number, carrier):
+    """
+        tracking shipment using kuaidi100 api
+    """
+
+    base_api_url = (
+        'https://www.kuaidi100.com/query?type={carrier_code}&postid={tracking_number}'
+    )
+
+    if carrier not in KUAIDI100_CARRIERS:
+        return []
+
+    state_code_map = {
+        "0": "在途",  # 即货物处于运输过程中
+        "1": "揽件",  # 货物已由快递公司揽收并且产生了第一条跟踪信息
+        "2": "疑难",  # 货物寄送过程出了问题
+        "3": "签收",  # 收件人已签收
+        "4": "退签",  # 即货物由于用户拒签、超区等原因退回，而且发件人已经签收
+        "5": "派件",  # 即快递正在进行同城派件
+        "6": "退回",  # 货物正处于退回发件人的途中
+    }
+
+    status_code_map = {
+        "0": "物流单暂无结果",
+        "1": "查询成功",
+        "2": "接口出现异常",
+    }
+
+    header = {
+        'User-Agent': 'Mozilla/5.0',
+    }
+
+    api_url = base_api_url.format(
+        carrier_code=KUAIDI100_CARRIERS[carrier],
+        tracking_number=tracking_number
+    )
+
+    response = requests.get(api_url, headers=header)
+    data = json.loads(response.text)
+
+    statuses = []
+    for status in data['data']:
+        new_status = {}
+        new_status['time'] = status['time']
+        new_status['status'] = status['context']
+        new_status['reporter'] = status['location']
+        statuses.append(new_status)
+
+    return statuses
 
 
 class Tracking():
@@ -29,12 +113,8 @@ class Tracking():
             return JinMei(tracking)
         elif carrier is None:
             return EMS(tracking)
-        elif carrier == 'EMS':
-            return EMS(tracking)
         elif carrier == '千喜':
             return QianXi(tracking)
-        elif carrier == '圆通':
-            return YuanTong(tracking)
         else:
             return None
 
@@ -58,7 +138,7 @@ class Tracking():
             dct = dict(zip(headers, statuses[i:i + 3]))
             parsed.append(dct)
 
-        return parsed
+        return parsed[::-1]
 
 
 class JinMei(Tracking):
@@ -99,38 +179,38 @@ class JinMei(Tracking):
         return parsed
 
 
-class EMS(Tracking):
-    '''
-        EMS
-    '''
+# class EMS(Tracking):
+#     '''
+#         EMS
+#     '''
 
-    tracking_base_url = (
-        'https://www.kuaidi100.com/query?type=ems&postid={tracking}&id=1&valicode=&temp='
-    )
+#     tracking_base_url = (
+#         'https://www.kuaidi100.com/query?type=ems&postid={tracking}&id=1&valicode=&temp='
+#     )
 
-    def track(self):
-        '''
-            EMS tracking
-        '''
-        response = json.loads(self.get_html())
+#     def track(self):
+#         '''
+#             EMS tracking
+#         '''
+#         response = json.loads(self.get_html())
 
-        statuses = []
-        for status in response['data']:
-            new_status = {}
-            new_status['time'] = status['time']
-            new_status['status'] = status['context']
-            new_status['reporter'] = status['location']
-            statuses.append(new_status)
+#         statuses = []
+#         for status in response['data']:
+#             new_status = {}
+#             new_status['time'] = status['time']
+#             new_status['status'] = status['context']
+#             new_status['reporter'] = status['location']
+#             statuses.append(new_status)
 
-        return statuses[::-1]
+#         return statuses[::-1]
 
-    def get_html(self):
-        '''
-            Getting HTML String From Tracking URL
-        '''
+#     def get_html(self):
+#         '''
+#             Getting HTML String From Tracking URL
+#         '''
 
-        response = requests.get(self.tracking_url, headers=self.header)
-        return response.text
+#         response = requests.get(self.tracking_url, headers=self.header)
+#         return response.text
 
 
 class QianXi(Tracking):
@@ -155,38 +235,38 @@ class QianXi(Tracking):
             statuses, headers=headers)
 
 
-class YuanTong(Tracking):
-    '''
-        圆通
-    '''
+# class YuanTong(Tracking):
+#     '''
+#         圆通
+#     '''
 
-    tracking_base_url = (
-        'https://www.kuaidi100.com/query?type=yuantong&postid={tracking}'
-    )
+#     tracking_base_url = (
+#         'https://www.kuaidi100.com/query?type=yuantong&postid={tracking}'
+#     )
 
-    def track(self):
-        '''
-            圆通 tracking
-        '''
-        response = json.loads(self.get_html())
+#     def track(self):
+#         '''
+#             圆通 tracking
+#         '''
+#         response = json.loads(self.get_html())
 
-        statuses = []
-        for status in response['data']:
-            new_status = {}
-            new_status['time'] = status['time']
-            new_status['status'] = status['context']
-            new_status['reporter'] = status['location']
-            statuses.append(new_status)
+#         statuses = []
+#         for status in response['data']:
+#             new_status = {}
+#             new_status['time'] = status['time']
+#             new_status['status'] = status['context']
+#             new_status['reporter'] = status['location']
+#             statuses.append(new_status)
 
-        return statuses[::-1]
+#         return statuses[::-1]
 
-    def get_html(self):
-        '''
-            Getting HTML String From Tracking URL
-        '''
+#     def get_html(self):
+#         '''
+#             Getting HTML String From Tracking URL
+#         '''
 
-        response = requests.get(self.tracking_url, headers=self.header)
-        return response.text
+#         response = requests.get(self.tracking_url, headers=self.header)
+#         return response.text
 
 
 if __name__ == '__main__':
