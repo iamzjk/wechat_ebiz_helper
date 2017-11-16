@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding=utf-8 -*-
 '''
     wechat business helper
 
@@ -17,7 +18,6 @@ from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import DataRequired
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import uuid
@@ -61,34 +61,20 @@ def index():
 def orders(client, phone):
     cur = mysql.connection.cursor()
 
-    if (client == 'lucaslinus') and (phone == 'linuslucas'):
-        query = '''
-        SELECT
-            client,
-            tracking,
-            carrier,
-            product,
-            price,
-            quantity,
-            DATE(created_time) AS created_time
-        FROM usatocn2013.orders
-        ORDER BY created_time DESC;
-        '''
-    else:
-        query = '''
-        SELECT
-            client,
-            tracking,
-            carrier,
-            product,
-            price,
-            quantity,
-            DATE(created_time) AS created_time
-        FROM usatocn2013.orders
-        WHERE client = '{client}'
-        AND phone = '{phone}'
-        ORDER BY created_time DESC;
-        '''.format(client=client, phone=phone)
+    query = '''
+    SELECT
+        client,
+        tracking,
+        carrier,
+        product,
+        price,
+        quantity,
+        DATE(created_time) AS created_time
+    FROM usatocn2013.orders
+    WHERE client = '{client}'
+    AND phone = '{phone}'
+    ORDER BY created_time DESC;
+    '''.format(client=client, phone=phone)
 
     cur.execute(query)
     orders = cur.fetchall()
@@ -417,10 +403,14 @@ def delete_order(current_user, order_id):
     return jsonify({'code': 20000, 'data': 'Order record deleted!'})
 
 
-@app.route('/api/tracking/<tracking_number>/<carrier>', methods=['GET'])
+@app.route('/api/tracking', methods=['POST'])
 @token_required
-def get_tracking_status(current_user, tracking_number, carrier):
-    statuses = tracking_shipment(tracking_number, carrier)
+def get_tracking_status(current_user):
+    data = request.get_json()
+    try:
+        statuses = tracking_shipment(data['tracking_number'], data['carrier'])
+    except Exception:
+        statuses = {'time': '', 'status': '出错啦，无法获取物流状态。'}
 
     return jsonify({'code': 20000, 'data': {'statuses': statuses}})
 

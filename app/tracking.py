@@ -18,14 +18,13 @@ KUAIDI100_CARRIERS = {
     '天天': 'tiantian',
 }
 
-HUAREN_CARRIERS = ['锦美', '千喜']
+HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海')
 
-SUPPORTED_CARRIERS = HUAREN_CARRIERS + list(KUAIDI100_CARRIERS.keys())
+# SUPPORTED_CARRIERS = HUAREN_CARRIERS + list(KUAIDI100_CARRIERS.keys())
 
 
 def tracking_shipment(tracking_number, carrier):
 
-    now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
     if carrier in HUAREN_CARRIERS:
         tracking_obj = Tracking.get_tracking_object(tracking_number, carrier)
         statuses = tracking_obj.track()
@@ -33,9 +32,11 @@ def tracking_shipment(tracking_number, carrier):
         statuses = track_via_kuaidi100(tracking_number, carrier)
     else:
         error_msg = '暂时不支持查询<{0}>'.format(carrier)
+        now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
         statuses = [{'time': now, 'status': error_msg}]
 
     if not statuses:
+        now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
         statuses = [{'time': now, 'status': '暂无物流状态， 请稍后再试。'}]
 
     return statuses
@@ -111,10 +112,12 @@ class Tracking():
 
         if carrier == '锦美':
             return JinMei(tracking)
-        elif carrier is None:
-            return EMS(tracking)
+        elif carrier == '峰海':
+            return FengHai(tracking)
         elif carrier == '千喜':
             return QianXi(tracking)
+        elif carrier == '贝海':
+            return BeiHai(tracking)
         else:
             return None
 
@@ -130,8 +133,9 @@ class Tracking():
         response = requests.get(self.tracking_url, headers=self.header)
         return response.text
 
-    def parse_statuses(self, statuses, headers):
-        statuses = statuses[3:]
+    def parse_statuses(self, statuses, headers, start_index=3):
+        if start_index > 0:
+            statuses = statuses[start_index:]
         parsed = []
         for i in range(0, len(statuses), 3):
             headers = headers
@@ -179,40 +183,6 @@ class JinMei(Tracking):
         return parsed
 
 
-# class EMS(Tracking):
-#     '''
-#         EMS
-#     '''
-
-#     tracking_base_url = (
-#         'https://www.kuaidi100.com/query?type=ems&postid={tracking}&id=1&valicode=&temp='
-#     )
-
-#     def track(self):
-#         '''
-#             EMS tracking
-#         '''
-#         response = json.loads(self.get_html())
-
-#         statuses = []
-#         for status in response['data']:
-#             new_status = {}
-#             new_status['time'] = status['time']
-#             new_status['status'] = status['context']
-#             new_status['reporter'] = status['location']
-#             statuses.append(new_status)
-
-#         return statuses[::-1]
-
-#     def get_html(self):
-#         '''
-#             Getting HTML String From Tracking URL
-#         '''
-
-#         response = requests.get(self.tracking_url, headers=self.header)
-#         return response.text
-
-
 class QianXi(Tracking):
     '''
         千喜
@@ -235,43 +205,72 @@ class QianXi(Tracking):
             statuses, headers=headers)
 
 
-# class YuanTong(Tracking):
-#     '''
-#         圆通
-#     '''
+class FengHai(Tracking):
+    '''
+        峰海
+    '''
 
-#     tracking_base_url = (
-#         'https://www.kuaidi100.com/query?type=yuantong&postid={tracking}'
-#     )
+    tracking_base_url = (
+        'http://fhkdex.com/index.php?c=order&f=search&sn={tracking}'
+    )
 
-#     def track(self):
-#         '''
-#             圆通 tracking
-#         '''
-#         response = json.loads(self.get_html())
+    def parse_html(self, html):
+        root = fromstring(html)
+        contents = root.xpath('//td')
 
-#         statuses = []
-#         for status in response['data']:
-#             new_status = {}
-#             new_status['time'] = status['time']
-#             new_status['status'] = status['context']
-#             new_status['reporter'] = status['location']
-#             statuses.append(new_status)
+        statuses = [content.text for content in contents]
 
-#         return statuses[::-1]
+        headers = ['time', 'reporter', 'status']
+        return self.parse_statuses(
+            statuses, headers=headers, start_index=0)
 
-#     def get_html(self):
-#         '''
-#             Getting HTML String From Tracking URL
-#         '''
 
-#         response = requests.get(self.tracking_url, headers=self.header)
-#         return response.text
+class BeiHai(Tracking):
+    '''
+        贝海
+    '''
+
+    tracking_base_url = (
+        'http://www.xlobo.com/api/querybillapi/QueryBill'
+    )
+
+    def __init__(self, tracking):
+        self.tracking = tracking
+
+    def track(self):
+        payload = {
+            'code': self.tracking
+        }
+        response = requests.post(
+            self.tracking_base_url,
+            data=payload,
+            headers=self.header
+        )
+
+        nodes = json.loads(response.text)['Items'][0]['Nodes']
+
+        statuses = []
+        for node in nodes:
+            flows = node['Flows']
+            for flow in flows:
+                if flow['StatusDetail'] == '-':
+                    status_text = flow['Status']
+                else:
+                    status_text = flow['Status'] + ': ' + flow['StatusDetail']
+                status = {
+                    'time': flow['StartTime'],
+                    'reporter': flow['Operator'],
+                    'status': status_text
+                }
+                statuses.append(status)
+        return statuses[::-1]
 
 
 if __name__ == '__main__':
-    # 8000118040
-    # QX900355101
-    tracking = Tracking.get_tracking_object('8000118040', '锦美')
+    # 8000118040 锦美
+    # QX900355101 千喜
+    # FH1688013550 峰海
+    # DB493222256US 贝海
+    tracking = Tracking.get_tracking_object('DB493222256US', '贝海')
     parsed = tracking.track()
     print(parsed)
