@@ -293,30 +293,46 @@ def get_all_orders(current_user):
 
     date_range = None
 
-    query = json.loads(request.args.get('search'))
-    if query.get('value'):
-        query_value = '%{}%'.format(query['value'])
-        query_key = query['key']
+    search = json.loads(request.args.get('search'))
+    page = int(request.args.get('page'))
+    per_page = int(request.args.get('limit'))
+
+    search_value = search.get('value')
+
+    if search_value:
+        search_value_like = '%{}%'.format(search['value'])
+        search_key = search['key']
 
     show_no_tracking = json.loads(request.args.get('showNoTracking'))
 
-    if query.get('value') and show_no_tracking:
-        orders = Order.query.filter(
-            getattr(Order, query_key).like(query_value),
+    if search_value and show_no_tracking:
+        cursor = Order.query.filter(
+            getattr(Order, search_key).like(search_value_like),
             Order.tracking == ''
-        ).order_by(Order.created_time.desc()).all()
-    elif query.get('value') and not show_no_tracking:
-        orders = Order.query.filter(
-            getattr(Order, query_key).like(query_value)
-        ).order_by(Order.created_time.desc()).all()
-    elif show_no_tracking and not query.get('value'):
-        orders = Order.query.filter(
+        ).order_by(
+            Order.created_time.desc()
+        )
+    elif search_value and not show_no_tracking:
+        cursor = Order.query.filter(
+            getattr(Order, search_key).like(search_value_like)
+        ).order_by(
+            Order.created_time.desc()
+        )
+    elif show_no_tracking and not search_value:
+        cursor = Order.query.filter(
             Order.tracking == ''
-        ).order_by(Order.created_time.desc()).all()
+        ).order_by(
+            Order.created_time.desc()
+        )
     else:
-        orders = Order.query.filter(
+        cursor = Order.query.filter(
             Order.client != '张三'
-        ).order_by(Order.created_time.desc()).all()
+        ).order_by(
+            Order.created_time.desc()
+        )
+
+    total = cursor.count()
+    orders = cursor.paginate(page, per_page, False).items
 
     output = []
     for order in orders:
@@ -337,7 +353,8 @@ def get_all_orders(current_user):
     return jsonify({
         'code': 20000,
         'data': {
-            'orders': output
+            'orders': output,
+            'total': total
         }
     })
 
