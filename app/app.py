@@ -314,7 +314,9 @@ def get_all_orders(current_user):
             Order.tracking == ''
         ).order_by(Order.created_time.desc()).all()
     else:
-        orders = Order.query.order_by(Order.created_time.desc()).all()
+        orders = Order.query.filter(
+            Order.client != '张三'
+        ).order_by(Order.created_time.desc()).all()
 
     output = []
     for order in orders:
