@@ -18,7 +18,7 @@ KUAIDI100_CARRIERS = {
     '天天': 'tiantian',
 }
 
-HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海')
+HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海', '美仓')
 
 # SUPPORTED_CARRIERS = HUAREN_CARRIERS + list(KUAIDI100_CARRIERS.keys())
 
@@ -118,6 +118,8 @@ class Tracking():
             return QianXi(tracking)
         elif carrier == '贝海':
             return BeiHai(tracking)
+        elif carrier == '美仓':
+            return MeiCang(tracking)
         else:
             return None
 
@@ -181,6 +183,16 @@ class JinMei(Tracking):
         #         print(err)
 
         return parsed
+
+
+class MeiCang(JinMei):
+    '''
+        美仓
+    '''
+
+    tracking_base_url = (
+        'http://meicangex.com/TrackSearch.aspx?TXT_TRACKNO={tracking}'
+    )
 
 
 class QianXi(Tracking):
@@ -271,6 +283,7 @@ if __name__ == '__main__':
     # QX900355101 千喜
     # FH1688013550 峰海
     # DB493222256US 贝海
-    tracking = Tracking.get_tracking_object('DB493222256US', '贝海')
+    # MC924916 美仓
+    tracking = Tracking.get_tracking_object('MC924916', '美仓')
     parsed = tracking.track()
     print(parsed)
