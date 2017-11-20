@@ -8,8 +8,9 @@ SELECT
     COUNT(*) AS order_counts,
     SUM(price) AS price,
     SUM(cost) AS cost,
-    (SUM(price) - SUM(cost)) AS gross_profit,
-    (SUM(price) - SUM(cost))/SUM(price) AS gross_profit_rate,
+    CAST(SUM(shipping) AS SIGNED) AS shipping,
+    (SUM(price) - SUM(cost) - SUM(shipping)) AS gross_profit,
+    (SUM(price) - SUM(cost) - SUM(shipping))/SUM(price) AS gross_profit_rate,
     MONTH(created_time) AS month,
     YEAR(NOW()) AS year
 FROM usatocn2013.orders
@@ -61,7 +62,7 @@ LIMIT 10;
 GET_DAILY_SALES_SUMMARY = """
 SELECT
     SUM(price) AS sales,
-    (SUM(price) - SUM(cost)) AS gross_profit,
+    (SUM(price) - SUM(cost) - SUM(shipping)) AS gross_profit,
     DATE(created_time) AS date
 FROM usatocn2013.orders
 WHERE client <> '张三'

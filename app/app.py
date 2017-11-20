@@ -344,6 +344,7 @@ def get_all_orders(current_user):
             'product': order.product,
             'price': str(int(order.price)),
             'cost': str(int(order.cost)),
+            'shipping': order.shipping,
             'quantity': str(order.quantity),
             'tracking': order.tracking,
             'carrier': order.carrier,
