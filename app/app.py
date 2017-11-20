@@ -377,6 +377,7 @@ def create_order(current_user):
         product=data['product'],
         price=data['price'],
         cost=data.get('cost'),
+        shipping=data['shipping'],
         quantity=data['quantity'],
         tracking=data.get('tracking', ''),
         carrier=data.get('carrier', ''),
