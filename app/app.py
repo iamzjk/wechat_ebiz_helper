@@ -146,7 +146,8 @@ def login():
         return jsonify({
             "code": 20000,
             "data": {
-                "token": token.decode('UTF-8')
+                "token": token.decode('UTF-8'),
+                "userId": user.user_id
             }
         })
 
@@ -337,7 +338,7 @@ def get_all_orders(current_user):
     output = []
     for order in orders:
         new = {
-            'order_id': str(order.order_id),
+            'order_id': order.order_id,
             'client': order.client,
             'phone': order.phone,
             'product': order.product,
@@ -369,6 +370,7 @@ def create_order(current_user):
     data = request.get_json()
 
     new_order = Order(
+        order_id=data['order_id'],
         client=data['client'],
         phone=data['phone'],
         product=data['product'],

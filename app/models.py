@@ -24,7 +24,7 @@ class Order(db.Model):
 class OrdersTest(db.Model):
     __tablename__ = 'orders_test'
 
-    order_id = Column(Integer, primary_key=True)
+    order_id = Column(String(25, 'utf8_unicode_ci'), nullable=False, primary_key=True)
     client = Column(String(25, 'utf8_unicode_ci'), nullable=False)
     phone = Column(String(15, 'utf8_unicode_ci'), nullable=False)
     product = Column(String(50, 'utf8_unicode_ci'), nullable=False)
@@ -41,7 +41,8 @@ class OrdersTest(db.Model):
 class User(db.Model):
     __tablename__ = 'user'
 
-    username = Column(String(50), primary_key=True)
+    user_id = Column(Integer, primary_key=True)
+    username = Column(String(50))
     password = Column(String(80))
     admin = Column(Integer)
     comment = Column(String(50))
