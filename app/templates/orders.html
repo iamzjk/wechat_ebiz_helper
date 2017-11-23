@@ -14,7 +14,18 @@
 {% for order in orders %}
     <tr>
         <td white-space: nowrap>{{ order.client }}</td>
-        <td><a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier) }}">{{ order.tracking }}</a></td>
+        <td>
+            <div class="row">
+                <a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier) }}">
+                    {{ order.tracking }}
+                </a>
+            </div>
+            <div class="row">
+                <a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier) }}">
+                    查询
+                </a>
+            </div>
+        </td>
         <td>
             <div class="row">品名：{{ order.product }}</div>
             <div class="row">价格：{{ order.price }}元</div>
