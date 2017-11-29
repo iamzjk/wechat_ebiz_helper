@@ -126,7 +126,7 @@ def login():
     auth = request.get_json()
 
     if not auth or not auth.get('username') or not auth.get('password'):
-        return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+        return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="No Password"'})
 
     username = auth['username']
     password = auth['password']
@@ -134,7 +134,7 @@ def login():
     user = User.query.filter_by(username=username).first()
 
     if not user:
-        return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+        return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="No Username"'})
 
     if check_password_hash(user.password, password):
         token = jwt.encode({
@@ -151,7 +151,7 @@ def login():
             }
         })
 
-    return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+    return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Wrong Auth Info"'})
 
 
 @app.route('/api/user/logout', methods=['POST'])
