@@ -26,7 +26,7 @@ class User(db.Model):
     __tablename__ = 'user'
 
     user_id = Column(Integer, primary_key=True)
-    username = Column(String(50))
-    password = Column(String(80))
+    username = Column(String(50, 'utf8_unicode_ci'))
+    password = Column(String(80, 'utf8_unicode_ci'))
     admin = Column(Integer)
-    comment = Column(String(50))
+    comment = Column(String(50, 'utf8_unicode_ci'))
