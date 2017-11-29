@@ -151,7 +151,7 @@ def login():
             }
         })
 
-    return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Wrong Auth Info"'+user.password})
+    return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Wrong Auth Info"'})
 
 
 @app.route('/api/user/logout', methods=['POST'])
