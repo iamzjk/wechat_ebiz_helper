@@ -464,10 +464,18 @@ def get_monthly_sales_count_to(current_user):
     query = sql.GET_THIS_MONTH_COUNT_TO
     cur = mysql.connection.cursor()
     cur.execute(query)
-    data = cur.fetchall()
+    data = cur.fetchone()
     cur.close()
 
-    return jsonify({'code': 20000, 'data': data[0]})
+    if not data:
+        data = {
+            'sales': 0,
+            'gross_profit': 0,
+            'year': datetime.datetime.utcnow().year,
+            'month': datetime.datetime.utcnow().month,
+        }
+
+    return jsonify({'code': 20000, 'data': data})
 
 
 @app.route('/api/stats/client_ranking/alltime', methods=['GET'])
