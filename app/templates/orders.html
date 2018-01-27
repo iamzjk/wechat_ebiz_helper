@@ -6,7 +6,7 @@
 <thead>
     <tr>
         <th>收件人</th> 
-        <th>快递单号</th>
+        <th>快递</th>
         <th>订单详情</th>
     </tr>
 </thead>
@@ -16,13 +16,21 @@
         <td white-space: nowrap>{{ order.client }}</td>
         <td>
             <div class="row">
+                {% if order.forward_tracking and order.forward_carrier %}
+                <a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier, forward_tracking=order.forward_tracking, forward_carrier=order.forward_carrier) }}">
+                {% else %}
                 <a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier) }}">
-                    {{ order.tracking }}
+                {% endif %}
+                {{ order.tracking }}
                 </a>
             </div>
             <div class="row">
+                {% if order.forward_tracking and order.forward_carrier %}
+                <a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier, forward_tracking=order.forward_tracking, forward_carrier=order.forward_carrier) }}">
+                {% else %}
                 <a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier) }}">
-                    点我查询
+                {% endif %}
+                点我查询
                 </a>
             </div>
         </td>

@@ -66,6 +66,8 @@ def orders(client, phone):
         client,
         tracking,
         carrier,
+        forward_tracking,
+        forward_carrier,
         product,
         price,
         quantity,
@@ -87,9 +89,18 @@ def orders(client, phone):
         return render_template('orders.html', orders=orders)
 
 
-@app.route('/orders/tracking_status/<tracking_number>/<carrier>')
-def tracking_status(tracking_number, carrier):
+@app.route(
+    '/orders/tracking_status/<tracking_number>/<carrier>',
+    defaults={'forward_tracking': None, 'forward_carrier': None}
+)
+@app.route('/orders/tracking_status/<tracking_number>/<carrier>/<forward_tracking>/<forward_carrier>')
+def tracking_status(tracking_number, carrier, forward_tracking, forward_carrier):
+
     statuses = tracking_shipment(tracking_number, carrier)
+
+    if forward_tracking and forward_carrier:
+        forward_statuses = tracking_shipment(forward_tracking, forward_carrier)
+        statuses = forward_statuses + statuses
 
     return render_template('tracking_status.html', statuses=statuses)
 
@@ -348,6 +359,8 @@ def get_all_orders(current_user):
             'quantity': str(order.quantity),
             'tracking': order.tracking,
             'carrier': order.carrier,
+            'forward_tracking': order.forward_tracking,
+            'forward_carrier': order.forward_carrier,
             'created_time': order.created_time,
         }
         output.append(new)
@@ -380,7 +393,9 @@ def create_order(current_user):
         shipping=data['shipping'],
         quantity=data['quantity'],
         tracking=data.get('tracking', ''),
+        forward_tracking=data.get('forward_tracking', ''),
         carrier=data.get('carrier', ''),
+        forward_carrier=data.get('forward_carrier', ''),
     )
     db.session.add(new_order)
     db.session.commit()
