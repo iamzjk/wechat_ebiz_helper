@@ -23,7 +23,7 @@ ORDER BY MONTH(created_time) DESC;
 GET_THIS_MONTH_COUNT_TO = """
 SELECT
     SUM(price) AS sales,
-    (SUM(price) - SUM(cost)) AS gross_profit,
+    (SUM(price) - SUM(cost) - SUM(shipping)) AS gross_profit,
     YEAR(NOW()) AS year,
     MONTH(NOW()) AS month
 FROM usatocn2013.orders
