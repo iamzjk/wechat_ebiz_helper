@@ -492,6 +492,7 @@ def get_monthly_sales_count_to(current_user):
 
     data['sales_usd'] = int(data['sales'] * cny_usd)
     data['gross_profit_usd'] = int(data['gross_profit'] * cny_usd)
+    data['exchange_rate'] = round(1 / cny_usd, 2)
 
     if not data:
         data = {
