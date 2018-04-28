@@ -32,7 +32,7 @@ from models import db, Order, User
 app = Flask(__name__)
 Bootstrap(app)
 app.config.update(config)
-app.config['CURRENCY_EXCHANGE_API'] = 'http://free.currencyconverterapi.com/api/v3/convert?q={from}_{to}&compact=ultra'
+# app.config['CURRENCY_EXCHANGE_API'] = 'http://free.currencyconverterapi.com/api/v3/convert?q={from}_{to}&compact=ultra'
 
 mysql = MySQL(app)
 db.init_app(app)
@@ -485,12 +485,12 @@ def get_monthly_sales_count_to(current_user):
     data = cur.fetchone()
     cur.close()
 
-    response = requests.get(
-        app.config['CURRENCY_EXCHANGE_API'].format(from='CNY', to='USD'))
-    cny_usd = response.json().get('CNY_USD', 0.158)
+    # response = requests.get(
+    #     app.config['CURRENCY_EXCHANGE_API'].format(from='CNY', to='USD'))
+    # cny_usd = response.json().get('CNY_USD', 0.158)
 
-    data['sales_usd'] = int(data['sales'] / cny_usd)
-    data['gross_profit'] = int(data['gross_profit'] / cny_usd)
+    # data['sales_usd'] = int(data['sales'] / cny_usd)
+    # data['gross_profit'] = int(data['gross_profit'] / cny_usd)
 
     if not data:
         data = {
