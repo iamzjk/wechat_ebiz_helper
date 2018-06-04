@@ -1,0 +1,18 @@
+'''
+    Configurations Example
+    Filename: config.py
+'''
+
+config = {
+    'SECRET_KEY': 'yoursecretkey',
+    'JSON_AS_ASCII': False,
+    'MYSQL_HOST': 'localhost',
+    'MYSQL_PORT': 3306,
+    'MYSQL_USER': 'username',
+    'MYSQL_PASSWORD': 'password',
+    'MYSQL_CURSORCLASS': 'DictCursor',
+    'SQLALCHEMY_DATABASE_URI':
+        'your_mysql_connection_string'),
+    'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+    'GRAPHQL': 'localhost:5000/graphql',
+}

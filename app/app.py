@@ -13,7 +13,8 @@ import datetime
 from functools import wraps
 import json
 
-from flask import Flask, render_template, redirect, url_for, jsonify, request, make_response
+from flask import Flask, render_template, redirect, url_for
+from flask import jsonify, request, make_response
 from flask_mysqldb import MySQL
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
@@ -21,8 +22,8 @@ from wtforms import StringField
 from wtforms.validators import DataRequired
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.contrib.cache import SimpleCache
 import jwt
-import uuid
 import requests
 
 from config import config
@@ -33,10 +34,14 @@ from models import db, Order, User
 app = Flask(__name__)
 Bootstrap(app)
 app.config.update(config)
-app.config['CURRENCY_EXCHANGE_API'] = 'http://free.currencyconverterapi.com/api/v3/convert?q={from_currency}_{to_currency}&compact=ultra'
+app.config['CURRENCY_EXCHANGE_API'] = (
+    'http://free.currencyconverterapi.com/api/'
+    'v3/convert?q={from_currency}_{to_currency}&compact=ultra'
+)
 
 mysql = MySQL(app)
 db.init_app(app)
+cache = SimpleCache()
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -97,8 +102,13 @@ def orders(client, phone):
     '/orders/tracking_status/<tracking_number>/<carrier>',
     defaults={'forward_tracking': None, 'forward_carrier': None}
 )
-@app.route('/orders/tracking_status/<tracking_number>/<carrier>/<forward_tracking>/<forward_carrier>')
-def tracking_status(tracking_number, carrier, forward_tracking, forward_carrier):
+@app.route(
+    '/orders/tracking_status/<tracking_number>/'
+    '<carrier>/<forward_tracking>/<forward_carrier>'
+)
+def tracking_status(
+    tracking_number, carrier, forward_tracking, forward_carrier
+):
 
     statuses = tracking_shipment(tracking_number, carrier)
 
@@ -127,8 +137,12 @@ def token_required(f):
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'])
-            current_user = User.query.filter_by(username=data['username']).first()
-        except:
+            current_user = cache.get('current_user')
+            if not current_user:
+                current_user = User.query.filter_by(
+                    username=data['username']).first()
+                cache.set('current_user', current_user)
+        except Exception:
             return jsonify({'code': 50014, 'data': 'Token is invalid!'})
 
         return f(current_user, *args, **kwargs)
@@ -136,12 +150,24 @@ def token_required(f):
     return decorated
 
 
+@app.route('/api/graphql/usatocn2013', methods=['POST'])
+@token_required
+def redirect_to_graphql(current):
+    '''
+        Redirecting to graphql if passed authentication
+    '''
+    return redirect(app.config['GRAPHQL']['USATOCN2013'], code=307)
+
+
 @app.route('/api/user/login', methods=['POST'])
 def login():
     auth = request.get_json()
 
     if not auth or not auth.get('username') or not auth.get('password'):
-        return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="No Password"'})
+        return make_response(
+            'Could not verify', 401,
+            {'WWW-Authenticate': 'Basic realm="No Password"'}
+        )
 
     username = auth['username']
     password = auth['password']
@@ -149,7 +175,10 @@ def login():
     user = User.query.filter_by(username=username).first()
 
     if not user:
-        return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="No Username"'})
+        return make_response(
+            'Could not verify', 401,
+            {'WWW-Authenticate': 'Basic realm="No Username"'}
+        )
 
     if check_password_hash(user.password, password):
         token = jwt.encode({
@@ -166,7 +195,10 @@ def login():
             }
         })
 
-    return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Wrong Auth Info"'})
+    return make_response(
+        'Could not verify', 401,
+        {'WWW-Authenticate': 'Basic realm="Wrong Auth Info"'}
+    )
 
 
 @app.route('/api/user/logout', methods=['POST'])
@@ -290,7 +322,9 @@ def get_user_info(current_user):
                 role
             ],
             "name": current_user.username,
-            "avatar": "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+            "avatar":
+                'https://wpimg.wallstcn.com/'
+                'f778738c-e4f8-4870-b634-56703b4acafe.gif'
         }
     }
 
@@ -307,7 +341,7 @@ def get_all_orders(current_user):
     # if date_range:
     #     date_start, _, date_end = date_range.split('-')
 
-    date_range = None
+    # date_range = None
 
     search = json.loads(request.args.get('search'))
     page = int(request.args.get('page'))
@@ -383,7 +417,8 @@ def get_all_orders(current_user):
 def create_order(current_user):
     print('Creating Order')
     if not current_user.admin:
-        return jsonify({'code': 20001, 'data': 'Cannot perform that function!'})
+        return jsonify(
+            {'code': 20001, 'data': 'Cannot perform that function!'})
 
     data = request.get_json()
 
@@ -487,7 +522,8 @@ def get_monthly_sales_count_to(current_user):
     cur.close()
 
     response = requests.get(
-        app.config['CURRENCY_EXCHANGE_API'].format(from_currency='CNY', to_currency='USD'))
+        app.config['CURRENCY_EXCHANGE_API'].format(
+            from_currency='CNY', to_currency='USD'))
     cny_usd = response.json().get('CNY_USD', 0.158)
 
     data['sales_usd'] = int(data['sales'] * cny_usd)
