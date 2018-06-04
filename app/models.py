@@ -18,6 +18,8 @@ class Order(db.Model):
     tax_pct = Column(Float(10, True), nullable=False, server_default=text("'0.00'"))
     tracking = Column(String(50, 'utf8_unicode_ci'), server_default=text("''"))
     carrier = Column(String(15, 'utf8_unicode_ci'), server_default=text("''"))
+    forward_tracking = Column(String(50, 'utf8_unicode_ci'), server_default=text("''"))
+    forward_carrier = Column(String(15, 'utf8_unicode_ci'), server_default=text("''"))
     created_time = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
     updated_time = Column(DateTime)
 
@@ -26,7 +28,7 @@ class User(db.Model):
     __tablename__ = 'user'
 
     user_id = Column(Integer, primary_key=True)
-    username = Column(String(50))
-    password = Column(String(80))
+    username = Column(String(50, 'utf8_unicode_ci'))
+    password = Column(String(80, 'utf8_unicode_ci'))
     admin = Column(Integer)
-    comment = Column(String(50))
+    comment = Column(String(50, 'utf8_unicode_ci'))

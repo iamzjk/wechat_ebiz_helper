@@ -5,6 +5,8 @@
 
     How to put SQLAlchemy models in a seperate file
     https://stackoverflow.com/questions/9692962/flask-sqlalchemy-import-context-issue/9695045#9695045
+
+    3/31/2018   Hide tracking button when no tracking number available
 '''
 
 import datetime
@@ -21,6 +23,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import uuid
+import requests
 
 from config import config
 import sql
@@ -30,6 +33,7 @@ from models import db, Order, User
 app = Flask(__name__)
 Bootstrap(app)
 app.config.update(config)
+app.config['CURRENCY_EXCHANGE_API'] = 'http://free.currencyconverterapi.com/api/v3/convert?q={from_currency}_{to_currency}&compact=ultra'
 
 mysql = MySQL(app)
 db.init_app(app)
@@ -66,6 +70,8 @@ def orders(client, phone):
         client,
         tracking,
         carrier,
+        forward_tracking,
+        forward_carrier,
         product,
         price,
         quantity,
@@ -87,9 +93,18 @@ def orders(client, phone):
         return render_template('orders.html', orders=orders)
 
 
-@app.route('/orders/tracking_status/<tracking_number>/<carrier>')
-def tracking_status(tracking_number, carrier):
+@app.route(
+    '/orders/tracking_status/<tracking_number>/<carrier>',
+    defaults={'forward_tracking': None, 'forward_carrier': None}
+)
+@app.route('/orders/tracking_status/<tracking_number>/<carrier>/<forward_tracking>/<forward_carrier>')
+def tracking_status(tracking_number, carrier, forward_tracking, forward_carrier):
+
     statuses = tracking_shipment(tracking_number, carrier)
+
+    if forward_tracking and forward_carrier:
+        forward_statuses = tracking_shipment(forward_tracking, forward_carrier)
+        statuses = forward_statuses + statuses
 
     return render_template('tracking_status.html', statuses=statuses)
 
@@ -151,7 +166,7 @@ def login():
             }
         })
 
-    return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Wrong Auth Info"'+user.password})
+    return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Wrong Auth Info"'})
 
 
 @app.route('/api/user/logout', methods=['POST'])
@@ -348,6 +363,8 @@ def get_all_orders(current_user):
             'quantity': str(order.quantity),
             'tracking': order.tracking,
             'carrier': order.carrier,
+            'forward_tracking': order.forward_tracking,
+            'forward_carrier': order.forward_carrier,
             'created_time': order.created_time,
         }
         output.append(new)
@@ -380,7 +397,9 @@ def create_order(current_user):
         shipping=data['shipping'],
         quantity=data['quantity'],
         tracking=data.get('tracking', ''),
+        forward_tracking=data.get('forward_tracking', ''),
         carrier=data.get('carrier', ''),
+        forward_carrier=data.get('forward_carrier', ''),
     )
     db.session.add(new_order)
     db.session.commit()
@@ -464,10 +483,26 @@ def get_monthly_sales_count_to(current_user):
     query = sql.GET_THIS_MONTH_COUNT_TO
     cur = mysql.connection.cursor()
     cur.execute(query)
-    data = cur.fetchall()
+    data = cur.fetchone()
     cur.close()
 
-    return jsonify({'code': 20000, 'data': data[0]})
+    response = requests.get(
+        app.config['CURRENCY_EXCHANGE_API'].format(from_currency='CNY', to_currency='USD'))
+    cny_usd = response.json().get('CNY_USD', 0.158)
+
+    data['sales_usd'] = int(data['sales'] * cny_usd)
+    data['gross_profit_usd'] = int(data['gross_profit'] * cny_usd)
+    data['exchange_rate'] = round(1 / cny_usd, 2)
+
+    if not data:
+        data = {
+            'sales': 0,
+            'gross_profit': 0,
+            'year': datetime.datetime.utcnow().year,
+            'month': datetime.datetime.utcnow().month,
+        }
+
+    return jsonify({'code': 20000, 'data': data})
 
 
 @app.route('/api/stats/client_ranking/alltime', methods=['GET'])
