@@ -22,15 +22,6 @@
                 {% else %}
                 <a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier) }}">
                 {% endif %}
-                {{ order.tracking }}
-                </a>
-            </div>
-            <div class="row">
-                {% if order.forward_tracking and order.forward_carrier %}
-                <a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier, forward_tracking=order.forward_tracking, forward_carrier=order.forward_carrier) }}">
-                {% else %}
-                <a href="{{ url_for('tracking_status', tracking_number=order.tracking, carrier=order.carrier) }}">
-                {% endif %}
                 点我查询
                 </a>
             </div>
@@ -40,7 +31,6 @@
         </td>
         <td>
             <div class="row">品名：{{ order.product }}</div>
-            <div class="row">价格：{{ order.price }}元</div>
             <div class="row">数量：{{ order.quantity }}</div>
             <div class="row">日期：{{ order.created_time }}</div>
         </td>

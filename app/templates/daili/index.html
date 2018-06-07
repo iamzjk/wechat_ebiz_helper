@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}橙昕美购 - 查询{% endblock %}
+{% block title %}代购助手{% endblock %}
 
 {% block head %}
 {{ super() }}
@@ -12,11 +12,10 @@
 
 {% block content %}
 <div class='container', style="padding:0 25px; max-width:350px">
-  <h2>橙昕美购</h2>
-  <h4>订单与快递查询工具</h4>
-  <p>掌柜微信：jelfsony</p>
+  <h2>代购助手</h2>
+  <h4>订单快递查询</h4>
   <br>
-    <form method="POST" action="/">
+    <form method="POST" action="/dl/">
         <dl>
         {{ form.csrf_token }}
         {{ wtf.form_field(form.client) }}
@@ -27,4 +26,4 @@
 </div>
 {% endblock %}
 
-{% include "footer.html" %}
+{% include "daili/footer.html" %}
