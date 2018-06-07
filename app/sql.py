@@ -8,29 +8,29 @@ SELECT
     COUNT(*) AS order_counts,
     SUM(price) AS price,
     SUM(cost) AS cost,
-    CAST(SUM(shipping) AS SIGNED) AS shipping,
+    SUM(shipping) AS shipping,
     (SUM(price) - SUM(cost) - SUM(shipping)) AS gross_profit,
     (SUM(price) - SUM(cost) - SUM(shipping))/SUM(price) AS gross_profit_rate,
-    MONTH(created_time) AS month,
-    YEAR(NOW()) AS year
+    EXTRACT(month from created_time) AS month,
+    EXTRACT(year from CURRENT_DATE) AS year
 FROM usatocn2013.orders
 WHERE client <> '张三'
-AND YEAR(created_time) = YEAR(NOW())
-GROUP BY MONTH(created_time)
-ORDER BY MONTH(created_time) DESC;
+AND EXTRACT(year from created_time) = EXTRACT(year from CURRENT_DATE)
+GROUP BY EXTRACT(month from created_time)
+ORDER BY EXTRACT(month from created_time) DESC;
 """
 
 GET_THIS_MONTH_COUNT_TO = """
 SELECT
     SUM(price) AS sales,
     (SUM(price) - SUM(cost) - SUM(shipping)) AS gross_profit,
-    YEAR(NOW()) AS year,
-    MONTH(NOW()) AS month
+    EXTRACT(year from CURRENT_DATE) AS year,
+    EXTRACT(month from CURRENT_DATE) AS month
 FROM usatocn2013.orders
 WHERE client <> '张三'
-AND YEAR(created_time) = YEAR(NOW())
-AND MONTH(created_time) = MONTH(NOW())
-GROUP BY MONTH(created_time);
+AND EXTRACT(year from created_time) = EXTRACT(year from CURRENT_DATE)
+AND EXTRACT(month from created_time) = EXTRACT(month from CURRENT_DATE)
+GROUP BY EXTRACT(month from created_time);
 """
 
 GET_ALLTIME_CLIENT_RANKING = """
@@ -66,8 +66,8 @@ SELECT
     DATE(created_time) AS date
 FROM usatocn2013.orders
 WHERE client <> '张三'
-AND MONTH(created_time) = MONTH(NOW())
-AND YEAR(created_time) = YEAR(NOW())
+AND EXTRACT(month from created_time) = EXTRACT(month from CURRENT_DATE)
+AND EXTRACT(year from created_time) = EXTRACT(year from CURRENT_DATE)
 GROUP BY DATE(created_time)
 ORDER BY DATE(created_time);
 """
