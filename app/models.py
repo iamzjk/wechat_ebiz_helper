@@ -6,6 +6,7 @@ db = SQLAlchemy()
 
 class Order(db.Model):
     __tablename__ = 'orders'
+    __table_args__ = {'schema': 'usatocn2013'}
 
     order_id = Column(Integer, primary_key=True)
     client = Column(String(25, 'utf8_unicode_ci'), nullable=False)
@@ -26,6 +27,7 @@ class Order(db.Model):
 
 class User(db.Model):
     __tablename__ = 'user'
+    __table_args__ = {'schema': 'usatocn2013'}
 
     user_id = Column(Integer, primary_key=True)
     username = Column(String(50, 'utf8_unicode_ci'))

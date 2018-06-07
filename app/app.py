@@ -15,7 +15,6 @@ import json
 
 from flask import Flask, render_template, redirect, url_for
 from flask import jsonify, request, make_response
-from flask_mysqldb import MySQL
 from flask_bootstrap import Bootstrap
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -27,6 +26,7 @@ from daili import daili
 from config import config
 import sql
 from tracking import tracking_shipment
+import util
 from models import db, Order, User
 from forms import ShowMyOrderForm
 
@@ -39,7 +39,6 @@ app.config['CURRENCY_EXCHANGE_API'] = (
     'v3/convert?q={from_currency}_{to_currency}&compact=ultra'
 )
 
-mysql = MySQL(app)
 db.init_app(app)
 cache = SimpleCache()
 
@@ -59,28 +58,7 @@ def index():
 
 @app.route('/orders/<client>/<phone>')
 def orders(client, phone):
-    cur = mysql.connection.cursor()
-
-    query = '''
-    SELECT
-        client,
-        tracking,
-        carrier,
-        forward_tracking,
-        forward_carrier,
-        product,
-        price,
-        quantity,
-        DATE(created_time) AS created_time
-    FROM usatocn2013.orders
-    WHERE client = '{client}'
-    AND phone = '{phone}'
-    ORDER BY created_time DESC;
-    '''.format(client=client, phone=phone)
-
-    cur.execute(query)
-    orders = cur.fetchall()
-    cur.close()
+    orders = Order.query.filter_by(client=client, phone=phone).all()
 
     if not orders:
         return render_template(
@@ -493,10 +471,8 @@ def get_monthly_sales_stats(current_user):
     if not current_user.admin:
         return jsonify({'message': 'Cannot perform that function!'})
     query = sql.GET_MONTHLY_SALES
-    cur = mysql.connection.cursor()
-    cur.execute(query)
-    data = cur.fetchall()
-    cur.close()
+
+    data = util.sqlalchemy_to_dict(db.engine.execute(query))
 
     return jsonify({'code': 20000, 'data': data})
 
@@ -507,10 +483,7 @@ def get_monthly_sales_count_to(current_user):
     if not current_user.admin:
         return jsonify({'message': 'Cannot perform that function!'})
     query = sql.GET_THIS_MONTH_COUNT_TO
-    cur = mysql.connection.cursor()
-    cur.execute(query)
-    data = cur.fetchone()
-    cur.close()
+    data = util.sqlalchemy_to_dict(db.engine.execute(query))[0]
 
     response = requests.get(
         app.config['CURRENCY_EXCHANGE_API'].format(
@@ -536,10 +509,8 @@ def get_monthly_sales_count_to(current_user):
 @token_required
 def get_alltime_client_ranking_stats(current_user):
     query = sql.GET_ALLTIME_CLIENT_RANKING
-    cur = mysql.connection.cursor()
-    cur.execute(query)
-    data = cur.fetchall()
-    cur.close()
+
+    data = util.sqlalchemy_to_dict(db.engine.execute(query))
 
     return jsonify({'code': 20000, 'data': data})
 
@@ -553,10 +524,8 @@ def get_period_client_ranking_stats(current_user, start_date, end_date):
     query = sql.GET_PERIOD_CLIENT_RANKING.format(
         start_date=start_date, end_date=end_date
     )
-    cur = mysql.connection.cursor()
-    cur.execute(query)
-    data = cur.fetchall()
-    cur.close()
+
+    data = util.sqlalchemy_to_dict(db.engine.execute(query))
 
     return jsonify({'code': 20000, 'data': data})
 
@@ -567,10 +536,8 @@ def get_daily_sales_summary(current_user):
     if not current_user.admin:
         return jsonify({'message': 'Cannot perform that function!'})
     query = sql.GET_DAILY_SALES_SUMMARY
-    cur = mysql.connection.cursor()
-    cur.execute(query)
-    data = cur.fetchall()
-    cur.close()
+
+    data = util.sqlalchemy_to_dict(db.engine.execute(query))
 
     db_output = {str(item['date']): item for item in data}
 
