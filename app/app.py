@@ -17,21 +17,21 @@ from flask import Flask, render_template, redirect, url_for
 from flask import jsonify, request, make_response
 from flask_mysqldb import MySQL
 from flask_bootstrap import Bootstrap
-from flask_wtf import FlaskForm
-from wtforms import StringField
-from wtforms.validators import DataRequired
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.contrib.cache import SimpleCache
 import jwt
 import requests
 
+from daili import daili
 from config import config
 import sql
 from tracking import tracking_shipment
 from models import db, Order, User
+from forms import ShowMyOrderForm
 
 app = Flask(__name__)
+app.register_blueprint(daili, url_prefix='/dl')
 Bootstrap(app)
 app.config.update(config)
 app.config['CURRENCY_EXCHANGE_API'] = (
@@ -44,15 +44,6 @@ db.init_app(app)
 cache = SimpleCache()
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
-
-###
-#   Forms
-###
-
-
-class ShowMyOrderForm(FlaskForm):
-    client = StringField('收件人', validators=[DataRequired()])
-    phone = StringField('电话', validators=[DataRequired()])
 
 
 @app.route('/', methods=['GET', 'POST'])
