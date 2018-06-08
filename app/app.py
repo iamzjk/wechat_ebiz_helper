@@ -57,7 +57,8 @@ def index():
             )
         )
     else:
-        return render_template('index.html', form=form)
+        searches = json.loads(request.cookies.get('cxmg-search-history', '[]'))
+        return render_template('index.html', form=form, searches=searches)
 
 
 @app.route('/orders/<client>/<phone>')
@@ -65,10 +66,18 @@ def orders(client, phone):
     orders = Order.query.filter_by(client=client, phone=phone).all()
 
     if not orders:
-        return render_template(
-            'no_order_found.html', client=client, phone=phone)
+        resp = make_response(render_template(
+            'no_order_found.html', client=client, phone=phone))
     else:
-        return render_template('orders.html', orders=orders)
+        resp = make_response(render_template('orders.html', orders=orders))
+
+    searches = json.loads(request.cookies.get('cxmg-search-history', '[]'))
+    new_search = {'client': client, 'phone': phone}
+    if new_search not in searches:
+        searches.append(new_search)
+    resp.set_cookie('cxmg-search-history', json.dumps(searches[::-1][:5]))
+
+    return resp
 
 
 @app.route(

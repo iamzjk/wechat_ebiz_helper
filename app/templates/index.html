@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-<div class='container', style="padding:0 25px; max-width:350px">
+<div class='container index-card'>
   <h2>橙昕美购</h2>
   <h4>订单与快递查询工具</h4>
   <p>掌柜微信：jelfsony</p>
@@ -25,6 +25,31 @@
         </dl>
     </form>
 </div>
+{% if searches|length %}
+<div class='container index-card card'>
+    <div class="card-header">
+        <h5>历史记录</h5>
+    </div>
+    <ul class="list-group list-group-flush" >
+        {% for search in searches %}
+        <li class="list-group-item">
+            {{ search.client }} {{ search.phone}}
+            <a class="search-history" href="{{ url_for('orders', client=search.client, phone=search.phone) }}">查看</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<style>
+    .index-card {
+        padding: 0 25px;
+        max-width: 350px;
+    }
+    .search-history {
+        float: right;
+    }
+</style>
 {% endblock %}
 
 {% include "footer.html" %}
