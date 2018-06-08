@@ -21,8 +21,8 @@ def index():
         return redirect(
             url_for(
                 '.orders',
-                client=form.client.data,
-                phone=form.phone.data
+                client=form.client.data.strip(),
+                phone=form.phone.data.strip()
             )
         )
     else:
