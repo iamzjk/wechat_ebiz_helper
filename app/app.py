@@ -50,7 +50,11 @@ def index():
     form = ShowMyOrderForm()
     if form.validate_on_submit():
         return redirect(
-            url_for('orders', client=form.client.data, phone=form.phone.data)
+            url_for(
+                'orders',
+                client=form.client.data.strip(),
+                phone=form.phone.data.strip()
+            )
         )
     else:
         return render_template('index.html', form=form)
