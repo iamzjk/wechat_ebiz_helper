@@ -112,6 +112,8 @@ class Tracking():
 
         if carrier == '锦美':
             return JinMei(tracking)
+        elif carrier == '越洋':
+            return YueYang(tracking)
         elif carrier == '峰海':
             return FengHai(tracking)
         elif carrier == '千喜':
@@ -173,6 +175,44 @@ class JinMei(Tracking):
 
         headers = ['time', 'status', 'reporter']
         parsed = self.parse_statuses(statuses, headers)
+
+        # if forward_tracking:
+        #     try:
+        #         ems = EMS(forward_tracking)
+        #         ems_statuses = ems.track()
+        #         parsed += ems_statuses
+        #     except Exception as err:
+        #         print(err)
+
+        return parsed
+
+
+class YueYang(Tracking):
+    '''
+        越洋
+    '''
+
+    tracking_base_url = (
+        'http://www.tes-logic.com/trackings?utf8=%E2%9C%93&q={tracking}'
+    )
+
+    def parse_html(self, html):
+        root = fromstring(html)
+        contents = root.xpath("//td")
+
+        # forward_tracking = None
+        statuses = []
+        for content in contents:
+            if len(content):
+                for child in content:
+                    statuses.append(content.text + child.text)
+                    # if content.text.startswith('国内速运'):
+                    #     forward_tracking = child.text
+            else:
+                statuses.append(content.text)
+
+        headers = ['time', 'status']
+        parsed = self.parse_statuses(statuses, headers, start_index=0)
 
         # if forward_tracking:
         #     try:
@@ -284,6 +324,7 @@ if __name__ == '__main__':
     # FH1688013550 峰海
     # DB493222256US 贝海
     # MC924916 美仓
-    tracking = Tracking.get_tracking_object('MC924916', '美仓')
+    # 8000160753 越洋
+    tracking = Tracking.get_tracking_object('8000160753', '越洋')
     parsed = tracking.track()
     print(parsed)
