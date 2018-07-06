@@ -18,7 +18,7 @@ KUAIDI100_CARRIERS = {
     '天天': 'tiantian',
 }
 
-HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海', '美仓')
+HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海', '美仓', '越洋')
 
 # SUPPORTED_CARRIERS = HUAREN_CARRIERS + list(KUAIDI100_CARRIERS.keys())
 
