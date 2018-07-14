@@ -18,7 +18,7 @@ KUAIDI100_CARRIERS = {
     '天天': 'tiantian',
 }
 
-HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海', '美仓', '越洋')
+HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海', '美仓', '越洋', '四方')
 
 # SUPPORTED_CARRIERS = HUAREN_CARRIERS + list(KUAIDI100_CARRIERS.keys())
 
@@ -110,18 +110,18 @@ class Tracking():
     @staticmethod
     def get_tracking_object(tracking, carrier):
 
-        if carrier == '锦美':
-            return JinMei(tracking)
-        elif carrier == '越洋':
-            return YueYang(tracking)
-        elif carrier == '峰海':
-            return FengHai(tracking)
-        elif carrier == '千喜':
-            return QianXi(tracking)
-        elif carrier == '贝海':
-            return BeiHai(tracking)
-        elif carrier == '美仓':
-            return MeiCang(tracking)
+        carriers = {
+            '锦美': JinMei,
+            '越洋': YueYang,
+            '峰海': FengHai,
+            '千喜': QianXi,
+            '贝海': BeiHai,
+            '美仓': MeiCang,
+            '四方': SiFang,
+        }
+
+        if carrier in carriers:
+            return carriers[carrier](tracking)
         else:
             return None
 
@@ -318,6 +318,30 @@ class BeiHai(Tracking):
         return statuses[::-1]
 
 
+class SiFang(Tracking):
+    '''
+        四方
+    '''
+
+    tracking_base_url = (
+        'http://us.transrush.com/track/search.json?number={tracking}'
+    )
+
+    def track(self):
+        response = requests.get(self.tracking_url)
+        nodes = json.loads(response.text)['data'][0]['tracks']
+        statuses = []
+        for node in nodes:
+            status = {
+                'time': node['TrackDate'],
+                'reporter': '',
+                'status': node['TrackContent']
+            }
+            statuses.append(status)
+        return statuses
+
+
+
 if __name__ == '__main__':
     # 8000118040 锦美
     # QX900355101 千喜
@@ -325,6 +349,7 @@ if __name__ == '__main__':
     # DB493222256US 贝海
     # MC924916 美仓
     # 8000160753 越洋
-    tracking = Tracking.get_tracking_object('8000160753', '越洋')
+    # 0711XG05 四方
+    tracking = Tracking.get_tracking_object('0711XG05', '四方')
     parsed = tracking.track()
     print(parsed)
