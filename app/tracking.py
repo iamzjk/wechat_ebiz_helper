@@ -247,8 +247,6 @@ class QianXi(Tracking):
 
     def parse_html(self, html):
         root = fromstring(html)
-        forward_tracking = root.xpath('//span[@id="HeaderEmsKind"]/span')
-        import pdb; pdb.set_trace()
         contents = root.xpath('//table[@id="oTHtable"]//td')
 
         statuses = [content.text for content in contents]
