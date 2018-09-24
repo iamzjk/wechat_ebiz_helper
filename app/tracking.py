@@ -212,15 +212,16 @@ class YueYang(Tracking):
                 statuses.append(content.text)
 
         headers = ['time', 'status']
-        parsed = self.parse_statuses(statuses, headers, start_index=0)
+        parsed = self.parse_statuses(statuses, headers)
 
-        # if forward_tracking:
-        #     try:
-        #         ems = EMS(forward_tracking)
-        #         ems_statuses = ems.track()
-        #         parsed += ems_statuses
-        #     except Exception as err:
-        #         print(err)
+        return parsed
+
+    def parse_statuses(self, statuses, headers):
+        parsed = []
+        for i in range(0, len(statuses), 2):
+            headers = headers
+            dct = dict(zip(headers, statuses[i:i + 2]))
+            parsed.append(dct)
 
         return parsed
 
@@ -345,11 +346,12 @@ class SiFang(Tracking):
 if __name__ == '__main__':
     # 8000118040 锦美
     # QX900355101 千喜
+    # QX900489673 千喜
     # FH1688013550 峰海
     # DB493222256US 贝海
     # MC924916 美仓
-    # 8000160753 越洋
+    # 8000163467 越洋
     # 0711XG05 四方
-    tracking = Tracking.get_tracking_object('0711XG05', '四方')
+    tracking = Tracking.get_tracking_object('MC924916', '美仓')
     parsed = tracking.track()
     print(parsed)
