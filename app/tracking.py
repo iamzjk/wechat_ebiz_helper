@@ -18,7 +18,7 @@ KUAIDI100_CARRIERS = {
     '天天': 'tiantian',
 }
 
-HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海', '美仓', '越洋', '四方')
+HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海', '美仓', '越洋', '四方', '华中')
 
 # SUPPORTED_CARRIERS = HUAREN_CARRIERS + list(KUAIDI100_CARRIERS.keys())
 
@@ -118,6 +118,7 @@ class Tracking():
             '贝海': BeiHai,
             '美仓': MeiCang,
             '四方': SiFang,
+            '华中': HuaZhong,
         }
 
         if carrier in carriers:
@@ -342,6 +343,47 @@ class SiFang(Tracking):
         return statuses
 
 
+class HuaZhong(Tracking):
+    '''
+        华中
+    '''
+
+    tracking_base_url = 'http://cpsair.com/chaxun.asp'
+
+    def __init__(self, tracking):
+        self.tracking = tracking
+        self.tracking_url = self.tracking_base_url
+
+    def track(self):
+        html = self.get_html()
+        return self.parse_html(html)
+
+    def get_html(self):
+        '''
+            Getting HTML String From Tracking URL
+        '''
+        headers = self.header.update({
+            'Content-Type': 'application/x-www-form-urlencoded'
+        })
+        response = requests.post(
+            self.tracking_url,
+            headers=headers,
+            data={'order_ids': self.tracking}
+        )
+        response.encoding='gbk'
+        return response.text
+
+    def parse_html(self, html):
+        root = fromstring(html)
+        contents = root.xpath("//td")
+
+        statuses = [c.text for c in contents]
+
+        headers = ['time', 'reporter', 'status']
+        parsed = self.parse_statuses(statuses, headers, start_index=0)
+
+        return parsed
+
 
 if __name__ == '__main__':
     # 8000118040 锦美
@@ -352,6 +394,7 @@ if __name__ == '__main__':
     # MC924916 美仓
     # 8000163467 越洋
     # 0711XG05 四方
-    tracking = Tracking.get_tracking_object('MC924916', '美仓')
+    # HZ1904124452SN 华中
+    tracking = Tracking.get_tracking_object('HZ1904124452SN', '华中')
     parsed = tracking.track()
     print(parsed)
