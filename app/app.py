@@ -36,7 +36,7 @@ Bootstrap(app)
 app.config.update(config)
 app.config['CURRENCY_EXCHANGE_API'] = (
     'http://free.currencyconverterapi.com/api/'
-    'v3/convert?q={from_currency}_{to_currency}&compact=ultra'
+    'v3/convert?q={from_currency}_{to_currency}&compact=ultra&apiKey=1c52687a2e170cf7bf5d'
 )
 
 db.init_app(app)
