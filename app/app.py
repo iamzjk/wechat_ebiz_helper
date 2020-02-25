@@ -34,10 +34,6 @@ app = Flask(__name__)
 app.register_blueprint(daili, url_prefix='/dl')
 Bootstrap(app)
 app.config.update(config)
-app.config['CURRENCY_EXCHANGE_API'] = (
-    'http://free.currencyconverterapi.com/api/'
-    'v3/convert?q={from_currency}_{to_currency}&compact=ultra&apiKey=1c52687a2e170cf7bf5d'
-)
 
 db.init_app(app)
 cache = SimpleCache()
@@ -498,10 +494,7 @@ def get_monthly_sales_count_to(current_user):
     query = sql.GET_THIS_MONTH_COUNT_TO
     data = util.sqlalchemy_to_dict(db.engine.execute(query))[0]
 
-    response = requests.get(
-        app.config['CURRENCY_EXCHANGE_API'].format(
-            from_currency='CNY', to_currency='USD'))
-    cny_usd = response.json().get('CNY_USD', 0.158)
+    cny_usd = util.exchange_rate(base='CNY', target='USD')['rate']
 
     data['sales_usd'] = int(data['sales'] * cny_usd)
     data['gross_profit_usd'] = int(data['gross_profit'] * cny_usd)
