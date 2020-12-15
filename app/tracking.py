@@ -407,10 +407,11 @@ class USBBGO(JinMei):
                     'time': values[2].strip(),
                     'status': values[1].strip()
                 })
-            parsed.append({
-                'time': values[1].strip(),
-                'status': values[2].strip()
-            })
+            else:
+                parsed.append({
+                    'time': values[1].strip(),
+                    'status': values[2].strip()
+                })
         return parsed
 
 
