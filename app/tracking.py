@@ -18,7 +18,7 @@ KUAIDI100_CARRIERS = {
     '天天': 'tiantian',
 }
 
-HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海', '美仓', '越洋', '四方', '华中')
+HUAREN_CARRIERS = ('峰海', '锦美', '千喜', '贝海', '美仓', '越洋', '四方', '华中', 'USBBGO')
 
 # SUPPORTED_CARRIERS = HUAREN_CARRIERS + list(KUAIDI100_CARRIERS.keys())
 
@@ -119,6 +119,7 @@ class Tracking():
             '美仓': MeiCang,
             '四方': SiFang,
             '华中': HuaZhong,
+            'USBBGO': USBBGO,
         }
 
         if carrier in carriers:
@@ -385,6 +386,34 @@ class HuaZhong(Tracking):
         return parsed
 
 
+class USBBGO(JinMei):
+    '''
+        USBBGO
+    '''
+
+    tracking_base_url = (
+        'https://www.usbbgo.com/SelectOrder.aspx?OrderNum={tracking}'
+    )
+
+    def parse_html(self, html):
+        root = fromstring(html)
+        contents = root.xpath("//div[@class='cx']/div[@class='text']/p")
+        statuses = [x.text for x in contents]
+        parsed = []
+        for status in statuses:
+            values = status.split('\r\n')
+            if not values[2].strip():
+                parsed.append({
+                    'time': values[2].strip(),
+                    'status': values[1].strip()
+                })
+            parsed.append({
+                'time': values[1].strip(),
+                'status': values[2].strip()
+            })
+        return parsed
+
+
 if __name__ == '__main__':
     # 8000118040 锦美
     # QX900355101 千喜
@@ -395,6 +424,7 @@ if __name__ == '__main__':
     # 8000163467 越洋
     # 0711XG05 四方
     # HZ1904124452SN 华中
-    tracking = Tracking.get_tracking_object('HZ1904124452SN', '华中')
+    # BG103390720 USBBGO
+    tracking = Tracking.get_tracking_object('BG103390720', 'USBBGO')
     parsed = tracking.track()
     print(parsed)
