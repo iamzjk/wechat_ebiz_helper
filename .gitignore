@@ -1,3 +1,5 @@
 .leancloud
 .condaauto
 .vscode/
+*.pyc
+__pycache__
