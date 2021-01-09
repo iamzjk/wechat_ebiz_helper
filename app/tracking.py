@@ -376,23 +376,29 @@ class USBBGO(JinMei):
 
     def parse_html_format1(self, html):
         root = fromstring(html)
-        contents = root.xpath("//div[@class='cx']/div[@class='text']/p")
-        statuses = [x.text for x in contents]
+        statuses = root.xpath(
+            "//div[@class='cx']//p/text() | //div[@class='cx']//p/a/text()"
+        )
 
         parsed = []
         for status in statuses:
-            values = status.split("\r\n")
-            if not values[2].strip():
-                parsed.append({"time": values[2].strip(), "status": values[1].strip()})
+            values = [v.strip() for v in status.split("\r\n") if v.strip()]
+            # skip empty rows
+            if not any(values):
+                continue
+            # put concated values in status field if not time found
+            if values[1:]:
+                parsed.append({"time": values[0], "status": values[1]})
             else:
-                parsed.append({"time": values[1].strip(), "status": values[2].strip()})
+                parsed.append({"time": "", "status": "".join(values)})
+
         return parsed
 
     def parse_html_format2(self, html):
         root = fromstring(html)
         contents = root.xpath("//td")
 
-        statuses = [content.text for content in contents]
+        statuses = [content.text.strip() for content in contents]
         headers = ["time", "status"]
         return self.parse_statuses(
             statuses, headers=headers, start_index=0, reverse_order=False

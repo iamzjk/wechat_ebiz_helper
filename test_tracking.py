@@ -178,24 +178,24 @@ def test_tracking_usbbgo_format1():
         {"time": "12/19/2020 5:58:03 AM", "status": "飞往中国"},
         {"time": "12/22/2020 9:36:13 PM", "status": "海关清关中"},
         {"time": "12/25/2020 5:28:10 PM", "status": "中国段转运中"},
+        {"time": "", "status": "国内快递公司：顺丰速递,单号："},
+        {"time": "", "status": "SF1163587967471"},
     ]
+    assert len(parsed) == len(expected)
     assert parsed == expected
-
-
-def test_tracking_usbbgo_format1_with_transfer():
-    # TODO: add support for transfer tracking
-    tracking = Tracking.get_tracking_object("BG103416673", "USBBGO")
-    parsed = tracking.track()
-    expected = []
-    assert parsed[-1]
 
 
 def test_tracking_usbbgo_format2():
     tracking = Tracking.get_tracking_object("BG103416882", "USBBGO")
     parsed = tracking.track()
     expected = [
-        {"time": "1/5/2020 12:10:09 PM", "status": "运单创建成功 "},
-        {"time": "1/6/2021 1:47:23 PM", "status": "包裹已揽收,待分拣。操作人【Jason】 "},
-        {"time": "1/6/2021 1:47:23 PM", "status": "分拣完毕,待发货。操作人【Becks】 "},
+        {"time": "1/5/2020 12:10:09 PM", "status": "运单创建成功"},
+        {"time": "1/6/2021 1:47:23 PM", "status": "包裹已揽收,待分拣。操作人【Jason】"},
+        {"time": "1/6/2021 1:47:23 PM", "status": "分拣完毕,待发货。操作人【Becks】"},
+        {"time": "1/7/2021 2:45:17 PM", "status": "已出库,货物运往LAX国际机场。交接人【自营卡车司机JAX】"},
+        {"time": "1/7/2021 2:52:04 PM", "status": "货物操作完毕，待运往LAX机场。操作人【洛杉矶操作中心待出库】"},
+        {"time": "1/9/2021 2:52:51 AM", "status": "航班起飞中，目的地清关口岸。操作人【国际出口发展部】"},
     ]
-    assert parsed == expected
+    # this order is not completed yet, only test for the first 6 statuses
+    assert len(parsed) >= len(expected)
+    assert parsed[: len(expected)] == expected
