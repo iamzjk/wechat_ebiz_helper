@@ -396,9 +396,16 @@ class USBBGO(JinMei):
 
     def parse_html_format2(self, html):
         root = fromstring(html)
-        contents = root.xpath("//td")
+        contents = root.xpath(
+            "//table[contains(@class, 'yundanTable')]/tbody/tr[not(contains(@style,'display:none'))]"
+        )
+        statuses = []
+        for content in contents:
+            values = [v.text.strip() for v in content.findall("td") if v.text]
+            if len(values) == 1:
+                statuses.append("")
+            statuses.extend(values)
 
-        statuses = [content.text.strip() for content in contents]
         headers = ["time", "status"]
         return self.parse_statuses(
             statuses, headers=headers, start_index=0, reverse_order=False
